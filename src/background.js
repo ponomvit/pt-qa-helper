@@ -1,11 +1,11 @@
-var currentTab;
-var extensionTabId;
-var jiraResponse;
+let currentTab;
+let extensionTabId;
+let jiraResponse;
 
 chrome.browserAction.onClicked.addListener(function(tab) {
-    console.log('opened')
+    console.log('opened');
+    console.log(tab);
     currentTab = tab;
-    getData();
     chrome.tabs.create({
         url: chrome.extension.getURL('popup.html'),
         active: false
@@ -33,109 +33,79 @@ chrome.tabs.onActivated.addListener(function(activeTab) {
     // how to fetch tab url using activeInfo.tabid
     chrome.tabs.get(activeTab.tabId, function(tab){
         changeTab(tab);
-        jiraRequest(tab);
+        //jiraRequest(tab);
     });
 });
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (tab.selected && changeInfo.url) {
         changeTab(tab);
-        jiraRequest(tab);
+        //jiraRequest(tab);
     }
 });
 
 function changeTab(updatedTab) {
-    if (updatedTab.url.indexOf('chrome-extension') < 0) {
-        currentTab = updatedTab;
-        getData();
-        chrome.runtime.sendMessage({url: updatedTab.url, id: updatedTab.id});
-    } else {
+    if (updatedTab.url.indexOf('chrome-extension://') >= 0) {
         extensionTabId = updatedTab.id;
+    } else {
+        currentTab = updatedTab;
+        getData(updatedTab);
     }
 }
 
 chrome.runtime.onMessage.addListener(function (message, sender, response) {
+    console.log(message);
     if (message.isOpened) {
-        chrome.runtime.sendMessage({url: currentTab.url, id: currentTab.id});
-        getData();
+        getData(currentTab);
     }
 
-    if (message.jsLoad === 'true') {
-        var updatedUrl = currentTab.url.replace(/\?js_fast_load=1/gi,'') + "?js_fast_load=0";
-        chrome.tabs.update(currentTab.id,{url:updatedUrl})
-    }
-    if (message.jsLoad === 'false') {
-        var updatedUrl = currentTab.url.replace(/\?js_fast_load=0/gi,'') + "?js_fast_load=1";
-        chrome.tabs.update(currentTab.id,{url:updatedUrl})
+    if (message.fastLoad) {
+        chrome.tabs.update(currentTab.id,{url:currentTab.url + "?js_fast_load"});
     }
 
-    if (message.keys) {
-        if (message.keys === '0') {
-            var updatedUrl;
-            if (currentTab.url.indexOf("?") !== -1) {
-                updatedUrl = currentTab.url.substring(0, currentTab.url.lastIndexOf('?')) + "?showTranslationKeys=0";
-            } else {
-                updatedUrl = currentTab.url + "?showTranslationKeys=0"
-            }
-            chrome.tabs.update(currentTab.id,{url:updatedUrl})
-        }
-        if (message.keys === '1') {
-            var updatedUrl;
-            if (currentTab.url.indexOf("?") !== -1) {
-                updatedUrl = currentTab.url.substring(0, currentTab.url.lastIndexOf('?')) + "?showTranslationKeys=1";
-            } else {
-                updatedUrl = currentTab.url + "?showTranslationKeys=1"
-            }
-            chrome.tabs.update(currentTab.id,{url:updatedUrl})
-        }
-        if (message.keys === '2') {
-            var updatedUrl;
-            if (currentTab.url.indexOf("?") !== -1) {
-                updatedUrl = currentTab.url.substring(0, currentTab.url.lastIndexOf('?')) + "?showTranslationKeys=2";
-            } else {
-                updatedUrl = currentTab.url + "?showTranslationKeys=2"
-            }
-            chrome.tabs.update(currentTab.id,{url:updatedUrl})
-        }
+    if (message.showKeys) {
+        chrome.tabs.update(currentTab.id,{url:currentTab.url + "?showTranslationKeys=1"});
     }
 });
 
-function getData() {
-    var versionPath = "/html/version.json";
-    var url = currentTab.url.match(/((http|https)\:\/\/[a-zA-Z\d\-\.\:]+)*/)[0] + versionPath + "?" + Date.now();
-    requestVersionJson(url)
-    jiraRequest(currentTab)
-}
+function getData(tab) {
+    let url = new URL(tab.url);
+    let urlToFetch = url.origin + "/html/version.json?" + Date.now();
 
-function requestVersionJson(url) {
+//
+    getPortalLogoAndBackground(tab);
+//
     function handleErrors(response) {
         if (!response.ok) {
+            chrome.runtime.sendMessage({isPortal:false,url:url.origin,version:null});
             throw Error(response.status + " " + response.statusText);
         }
         return response;
     }
 
-    fetch(url)
+    fetch(urlToFetch)
         .then(handleErrors)
         .then(response => response.json())
-        .then(response => response.WPL_Version ? chrome.runtime.sendMessage({version:response}) : null)
+        .then(response => response.WPL_Version ? chrome.runtime.sendMessage({isPortal:true,url:url.origin,version:response}) : chrome.runtime.sendMessage({isPortal:false}))
         .catch(error => {
             console.log(error);
-            fetch(url.replace("/html/","/"))
+            fetch(urlToFetch.replace("/html/","/"))
                 .then(handleErrors)
                 .then(data => data.json())
-                .then(data => data.WPL_Version ? chrome.runtime.sendMessage({version:data}) : null)
+                .then(data => data.WPL_Version ? chrome.runtime.sendMessage({isPortal:true,url:url.origin,version:data}) : chrome.runtime.sendMessage({isPortal:false}))
                 .catch(console.log)
-        })
+        });
+
+    //jiraRequest(currentTab)
 }
 
 
-function jiraRequest(tab) {
+/*function jiraRequest(tab) {
     if (tab.url.indexOf("portal-jira.playtech") >= 0) {
-        var jiraUrl = tab.url;
+        let jiraUrl = tab.url;
         console.log("JIRA woo");
 
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 jiraResponse = this.responseXML;
@@ -153,6 +123,59 @@ function jiraRequest(tab) {
         xhr.open("GET",jiraUrl + "?" + Date.now(), true);
         xhr.send();
     }
+}*/
+
+function getPortalLogoAndBackground(tab) {
+    chrome.tabs.executeScript(tab.id, {code:` 
+    console.log('executing script')
+    HTMLDocument.prototype.ready = function () {
+	return new Promise(function(resolve, reject) {
+		if (document.readyState === 'complete') {
+			resolve(document);
+		} else {
+			document.addEventListener('DOMContentLoaded', function() {
+			resolve(document);
+		});
+					}
+	});
+}
+    document.ready().then(() => {console.log('dom loaded');
+    logoElem = document.querySelector('.main-header__logo');
+     function getLogo() {
+     let logoElem = document.querySelector('.main-header__logo');
+     if (logoElem) {
+     return logoElem.getAttribute('src');
+     } else {
+     return null}  
+     } 
+     
+     function getHeaderColor () { 
+    let mainHeader = document.querySelector('.main-header__common');
+
+    if (mainHeader) {
+    return window.getComputedStyle(mainHeader, null).getPropertyValue("background-color")
+    } else {
+     return "#222"
+    }
+}
+      logo = getLogo()
+      headerColor = getHeaderColor()
+      
+      chrome.runtime.sendMessage({ url:window.location.origin,portalLogo: logo,headerColor:headerColor });
+      });
+`})
+}
+
+function getDOM (url) {
+    let xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            return this.responseXML
+        }
+    };
+    xhr.responseType = "document";
+    xhr.open("GET",url + "?" + Date.now(), true);
+    xhr.send();
 }
 
 function getSubTasks(result) {

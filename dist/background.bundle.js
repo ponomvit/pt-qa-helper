@@ -60,25 +60,25 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 33);
+/******/ 	return __webpack_require__(__webpack_require__.s = 55);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 33:
+/***/ 55:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var currentTab;
-var extensionTabId;
-var jiraResponse;
+var currentTab = void 0;
+var extensionTabId = void 0;
+var jiraResponse = void 0;
 
 chrome.browserAction.onClicked.addListener(function (tab) {
     console.log('opened');
+    console.log(tab);
     currentTab = tab;
-    getData();
     chrome.tabs.create({
         url: chrome.extension.getURL('popup.html'),
         active: false
@@ -106,125 +106,111 @@ chrome.tabs.onActivated.addListener(function (activeTab) {
     // how to fetch tab url using activeInfo.tabid
     chrome.tabs.get(activeTab.tabId, function (tab) {
         changeTab(tab);
-        jiraRequest(tab);
+        //jiraRequest(tab);
     });
 });
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (tab.selected && changeInfo.url) {
         changeTab(tab);
-        jiraRequest(tab);
+        //jiraRequest(tab);
     }
 });
 
 function changeTab(updatedTab) {
-    if (updatedTab.url.indexOf('chrome-extension') < 0) {
-        currentTab = updatedTab;
-        getData();
-        chrome.runtime.sendMessage({ url: updatedTab.url, id: updatedTab.id });
-    } else {
+    if (updatedTab.url.indexOf('chrome-extension://') >= 0) {
         extensionTabId = updatedTab.id;
+    } else {
+        currentTab = updatedTab;
+        getData(updatedTab);
     }
 }
 
 chrome.runtime.onMessage.addListener(function (message, sender, response) {
+    console.log(message);
     if (message.isOpened) {
-        chrome.runtime.sendMessage({ url: currentTab.url, id: currentTab.id });
-        getData();
+        getData(currentTab);
     }
 
-    if (message.jsLoad === 'true') {
-        var updatedUrl = currentTab.url.replace(/\?js_fast_load=1/gi, '') + "?js_fast_load=0";
-        chrome.tabs.update(currentTab.id, { url: updatedUrl });
-    }
-    if (message.jsLoad === 'false') {
-        var updatedUrl = currentTab.url.replace(/\?js_fast_load=0/gi, '') + "?js_fast_load=1";
-        chrome.tabs.update(currentTab.id, { url: updatedUrl });
+    if (message.fastLoad) {
+        chrome.tabs.update(currentTab.id, { url: currentTab.url + "?js_fast_load" });
     }
 
-    if (message.keys) {
-        if (message.keys === '0') {
-            var updatedUrl;
-            if (currentTab.url.indexOf("?") !== -1) {
-                updatedUrl = currentTab.url.substring(0, currentTab.url.lastIndexOf('?')) + "?showTranslationKeys=0";
-            } else {
-                updatedUrl = currentTab.url + "?showTranslationKeys=0";
-            }
-            chrome.tabs.update(currentTab.id, { url: updatedUrl });
-        }
-        if (message.keys === '1') {
-            var updatedUrl;
-            if (currentTab.url.indexOf("?") !== -1) {
-                updatedUrl = currentTab.url.substring(0, currentTab.url.lastIndexOf('?')) + "?showTranslationKeys=1";
-            } else {
-                updatedUrl = currentTab.url + "?showTranslationKeys=1";
-            }
-            chrome.tabs.update(currentTab.id, { url: updatedUrl });
-        }
-        if (message.keys === '2') {
-            var updatedUrl;
-            if (currentTab.url.indexOf("?") !== -1) {
-                updatedUrl = currentTab.url.substring(0, currentTab.url.lastIndexOf('?')) + "?showTranslationKeys=2";
-            } else {
-                updatedUrl = currentTab.url + "?showTranslationKeys=2";
-            }
-            chrome.tabs.update(currentTab.id, { url: updatedUrl });
-        }
+    if (message.showKeys) {
+        chrome.tabs.update(currentTab.id, { url: currentTab.url + "?showTranslationKeys=1" });
     }
 });
 
-function getData() {
-    var versionPath = "/html/version.json";
-    var url = currentTab.url.match(/((http|https)\:\/\/[a-zA-Z\d\-\.\:]+)*/)[0] + versionPath + "?" + Date.now();
-    requestVersionJson(url);
-    jiraRequest(currentTab);
-}
+function getData(tab) {
+    var url = new URL(tab.url);
+    var urlToFetch = url.origin + "/html/version.json?" + Date.now();
 
-function requestVersionJson(url) {
+    //
+    getPortalLogoAndBackground(tab);
+    //
     function handleErrors(response) {
         if (!response.ok) {
+            chrome.runtime.sendMessage({ isPortal: false, url: url.origin, version: null });
             throw Error(response.status + " " + response.statusText);
         }
         return response;
     }
 
-    fetch(url).then(handleErrors).then(function (response) {
+    fetch(urlToFetch).then(handleErrors).then(function (response) {
         return response.json();
     }).then(function (response) {
-        return response.WPL_Version ? chrome.runtime.sendMessage({ version: response }) : null;
+        return response.WPL_Version ? chrome.runtime.sendMessage({ isPortal: true, url: url.origin, version: response }) : chrome.runtime.sendMessage({ isPortal: false });
     }).catch(function (error) {
         console.log(error);
-        fetch(url.replace("/html/", "/")).then(handleErrors).then(function (data) {
+        fetch(urlToFetch.replace("/html/", "/")).then(handleErrors).then(function (data) {
             return data.json();
         }).then(function (data) {
-            return data.WPL_Version ? chrome.runtime.sendMessage({ version: data }) : null;
+            return data.WPL_Version ? chrome.runtime.sendMessage({ isPortal: true, url: url.origin, version: data }) : chrome.runtime.sendMessage({ isPortal: false });
         }).catch(console.log);
     });
+
+    //jiraRequest(currentTab)
 }
 
-function jiraRequest(tab) {
+/*function jiraRequest(tab) {
     if (tab.url.indexOf("portal-jira.playtech") >= 0) {
-        var jiraUrl = tab.url;
+        let jiraUrl = tab.url;
         console.log("JIRA woo");
 
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 jiraResponse = this.responseXML;
                 if (jiraResponse.querySelector('#issuetable')) {
                     getSubTasks(jiraResponse);
                 }
                 if (jiraResponse.querySelector('.issueaction-create-subtask')) {
-                    chrome.runtime.sendMessage({ createSubTaskButton: true });
+                    chrome.runtime.sendMessage({createSubTaskButton:true});
                 } else {
-                    chrome.runtime.sendMessage({ createSubTaskButton: false });
+                    chrome.runtime.sendMessage({createSubTaskButton:false});
                 }
             }
         };
         xhr.responseType = "document";
-        xhr.open("GET", jiraUrl + "?" + Date.now(), true);
+        xhr.open("GET",jiraUrl + "?" + Date.now(), true);
         xhr.send();
     }
+}*/
+
+function getPortalLogoAndBackground(tab) {
+    chrome.tabs.executeScript(tab.id, { code: ' \n    console.log(\'executing script\')\n    HTMLDocument.prototype.ready = function () {\n\treturn new Promise(function(resolve, reject) {\n\t\tif (document.readyState === \'complete\') {\n\t\t\tresolve(document);\n\t\t} else {\n\t\t\tdocument.addEventListener(\'DOMContentLoaded\', function() {\n\t\t\tresolve(document);\n\t\t});\n\t\t\t\t\t}\n\t});\n}\n    document.ready().then(() => {console.log(\'dom loaded\');\n    logoElem = document.querySelector(\'.main-header__logo\');\n     function getLogo() {\n     let logoElem = document.querySelector(\'.main-header__logo\');\n     if (logoElem) {\n     return logoElem.getAttribute(\'src\');\n     } else {\n     return null}  \n     } \n     \n     function getHeaderColor () { \n    let mainHeader = document.querySelector(\'.main-header__common\');\n\n    if (mainHeader) {\n    return window.getComputedStyle(mainHeader, null).getPropertyValue("background-color")\n    } else {\n     return "#222"\n    }\n}\n      logo = getLogo()\n      headerColor = getHeaderColor()\n      \n      chrome.runtime.sendMessage({ url:window.location.origin,portalLogo: logo,headerColor:headerColor });\n      });\n' });
+}
+
+function getDOM(url) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            return this.responseXML;
+        }
+    };
+    xhr.responseType = "document";
+    xhr.open("GET", url + "?" + Date.now(), true);
+    xhr.send();
 }
 
 function getSubTasks(result) {
