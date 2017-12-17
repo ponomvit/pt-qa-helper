@@ -3,16 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="3b2ddfb3-8342-434c-a4b4-447d892521b5" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/background.bundle.js" afterPath="$PROJECT_DIR$/dist/background.bundle.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/bundle.css" afterPath="$PROJECT_DIR$/dist/bundle.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dist/popup.bundle.js" afterPath="$PROJECT_DIR$/dist/popup.bundle.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/package.json" afterPath="$PROJECT_DIR$/package.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/App.css" afterPath="$PROJECT_DIR$/src/App.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/App.js" afterPath="$PROJECT_DIR$/src/App.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/Components/VersionBlock.js" afterPath="$PROJECT_DIR$/src/Components/VersionBlock.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/background.js" afterPath="$PROJECT_DIR$/src/background.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/index.css" afterPath="$PROJECT_DIR$/src/index.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/popup.js" afterPath="$PROJECT_DIR$/src/popup.js" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -65,8 +55,8 @@
       <file leaf-file-name="App.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/App.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="342">
-              <caret line="25" column="38" lean-forward="true" selection-start-line="25" selection-start-column="38" selection-end-line="25" selection-end-column="38" />
+            <state relative-caret-position="512">
+              <caret line="35" column="32" lean-forward="true" selection-start-line="35" selection-start-column="32" selection-end-line="35" selection-end-column="32" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
                 <element signature="e#18#59#0" expanded="true" />
@@ -420,12 +410,20 @@
       <workItem from="1513261231927" duration="15677000" />
       <workItem from="1513366702990" duration="4218000" />
       <workItem from="1513377468944" duration="150000" />
-      <workItem from="1513420565530" duration="58390000" />
+      <workItem from="1513420565530" duration="58501000" />
     </task>
+    <task id="LOCAL-00001" summary="vzhuh">
+      <created>1513549264881</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1513549264881</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="78435000" />
+    <option name="totallyTimeSpent" value="78546000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -464,6 +462,10 @@
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="vzhuh" />
+    <option name="LAST_COMMIT_MESSAGE" value="vzhuh" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -853,8 +855,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/App.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="342">
-          <caret line="25" column="38" lean-forward="true" selection-start-line="25" selection-start-column="38" selection-end-line="25" selection-end-column="38" />
+        <state relative-caret-position="512">
+          <caret line="35" column="32" lean-forward="true" selection-start-line="35" selection-start-column="32" selection-end-line="35" selection-end-column="32" />
           <folding>
             <element signature="n#!!doc" expanded="true" />
             <element signature="e#18#59#0" expanded="true" />
