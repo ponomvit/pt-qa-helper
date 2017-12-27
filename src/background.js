@@ -70,6 +70,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, response) {
 
     if (message.status === "loaded") {
         console.log('received msg from client logo , bg , url etc...');
+
         console.log(message);
         headerData.push(message);
         chrome.runtime.sendMessage({header:message})
