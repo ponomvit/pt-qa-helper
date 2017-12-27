@@ -1,11 +1,18 @@
-let currentTab;
+let state = {
+    from:'ptqa-background',
+    isPortal: null,
+    version:''
+};
+let headerData = [];
+let portalTab;
 let extensionTabId;
 let jiraResponse;
+
 
 chrome.browserAction.onClicked.addListener(function(tab) {
     console.log('opened');
     console.log(tab);
-    currentTab = tab;
+    checkTab(tab);
     chrome.tabs.create({
         url: chrome.extension.getURL('popup.html'),
         active: false
@@ -31,53 +38,59 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
 
 chrome.tabs.onActivated.addListener(function(activeTab) {
     // how to fetch tab url using activeInfo.tabid
-    chrome.tabs.get(activeTab.tabId, function(tab){
-        changeTab(tab);
-        //jiraRequest(tab);
+    chrome.tabs.get(activeTab.tabId, function (tab) {
+        checkTab(tab);
     });
 });
 
+let updatedURL;
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-    if (tab.selected && changeInfo.url) {
-        changeTab(tab);
-        //jiraRequest(tab);
+    if (tab.selected && (changeInfo.url !== undefined)) {
+        updatedURL = changeInfo.url;
+    }
+    if (tab.url === updatedURL && tab.status === 'complete') {
+        checkTab(tab);
     }
 });
 
-function changeTab(updatedTab) {
-    if (updatedTab.url.indexOf('chrome-extension://') >= 0) {
-        extensionTabId = updatedTab.id;
-    } else {
-        currentTab = updatedTab;
-        getData(updatedTab);
-    }
+function checkTab(tab) {
+        if (tab.url.indexOf('chrome-extension://') > -1) {
+            extensionTabId = tab.id;
+        } else if (tab.url.indexOf("http") > -1){
+            detectPortal(tab);
+        }
 }
 
 chrome.runtime.onMessage.addListener(function (message, sender, response) {
+    console.log('all messages log');
     console.log(message);
-    if (message.isOpened) {
-        getData(currentTab);
+
+    message.getHeaderData ? checkTab(portalTab) : null;
+    message.getVersion ? response({version:state.version}) : null;
+
+    if (message.status === "loaded") {
+        console.log('received msg from client logo , bg , url etc...');
+        console.log(message);
+        headerData.push(message);
+        chrome.runtime.sendMessage({header:message})
     }
 
-    if (message.fastLoad) {
-        chrome.tabs.update(currentTab.id,{url:currentTab.url + "?js_fast_load"});
-    }
+    message.fastLoad
+        ? chrome.tabs.update(portalTab.id,{url:portalTab.url + "?js_fast_load"})
+        : null;
 
-    if (message.showKeys) {
-        chrome.tabs.update(currentTab.id,{url:currentTab.url + "?showTranslationKeys=1"});
-    }
+    message.showKeys
+        ? chrome.tabs.update(portalTab.id,{url:portalTab.url + "?showTranslationKeys=1"})
+        : null;
 });
 
-function getData(tab) {
+function getVersionJson(tab) {
     let url = new URL(tab.url);
     let urlToFetch = url.origin + "/html/version.json?" + Date.now();
 
-//
-    getPortalLogoAndBackground(tab);
-//
     function handleErrors(response) {
         if (!response.ok) {
-            chrome.runtime.sendMessage({isPortal:false,url:url.origin,version:null});
+            chrome.runtime.sendMessage({version:null});
             throw Error(response.status + " " + response.statusText);
         }
         return response;
@@ -86,97 +99,70 @@ function getData(tab) {
     fetch(urlToFetch)
         .then(handleErrors)
         .then(response => response.json())
-        .then(response => response.WPL_Version ? chrome.runtime.sendMessage({isPortal:true,url:url.origin,version:response}) : chrome.runtime.sendMessage({isPortal:false}))
+        .then(response => {
+            if (response.WPL_Version) {
+                state.version = response;
+                chrome.runtime.sendMessage({version:state.version})
+            }
+        })
         .catch(error => {
             console.log(error);
             fetch(urlToFetch.replace("/html/","/"))
                 .then(handleErrors)
                 .then(data => data.json())
-                .then(data => data.WPL_Version ? chrome.runtime.sendMessage({isPortal:true,url:url.origin,version:data}) : chrome.runtime.sendMessage({isPortal:false}))
+                .then(response => {
+                    if (response.WPL_Version) {
+                        state.version = response;
+                        chrome.runtime.sendMessage({version:state.version})
+                    }
+                })
                 .catch(console.log)
         });
-
-    //jiraRequest(currentTab)
 }
-
-
-/*function jiraRequest(tab) {
-    if (tab.url.indexOf("portal-jira.playtech") >= 0) {
-        let jiraUrl = tab.url;
-        console.log("JIRA woo");
-
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                jiraResponse = this.responseXML;
-                if (jiraResponse.querySelector('#issuetable')) {
-                    getSubTasks(jiraResponse);
-                }
-                if (jiraResponse.querySelector('.issueaction-create-subtask')) {
-                    chrome.runtime.sendMessage({createSubTaskButton:true});
-                } else {
-                    chrome.runtime.sendMessage({createSubTaskButton:false});
-                }
-            }
-        };
-        xhr.responseType = "document";
-        xhr.open("GET",jiraUrl + "?" + Date.now(), true);
-        xhr.send();
-    }
-}*/
 
 function getPortalLogoAndBackground(tab) {
-    chrome.tabs.executeScript(tab.id, {code:` 
-    console.log('executing script')
-    HTMLDocument.prototype.ready = function () {
-	return new Promise(function(resolve, reject) {
-		if (document.readyState === 'complete') {
-			resolve(document);
-		} else {
-			document.addEventListener('DOMContentLoaded', function() {
-			resolve(document);
-		});
-					}
-	});
-}
-    document.ready().then(() => {console.log('dom loaded');
-    logoElem = document.querySelector('.main-header__logo');
+    chrome.tabs.executeScript(tab.id, {code:` var callback = function(){
+  // Handler when the DOM is fully loaded
+     console.log('dom loaded');
      function getLogo() {
-     let logoElem = document.querySelector('.main-header__logo');
-     if (logoElem) {
-     return logoElem.getAttribute('src');
-     } else {
-     return null}  
-     } 
+        let logoElem = document.querySelector('.main-header__logo') || document.querySelector('.main-logo__img')
+        if (logoElem && logoElem.getAttribute('src')) {
+        return logoElem.getAttribute('src');
+        } else if (logoElem) {
+        return logoElem.style.backgroundImage.slice(4, -1).replace(/"/g, "");;
+        } 
+        else {
+        console.log(logoElem)
+        return null
+        }  
+        } 
      
      function getHeaderColor () { 
-    let mainHeader = document.querySelector('.main-header__common');
+    let mainHeader = document.querySelector('.navigation-container');
 
     if (mainHeader) {
     return window.getComputedStyle(mainHeader, null).getPropertyValue("background-color")
     } else {
-     return "#222"
+     return null
     }
 }
       logo = getLogo()
       headerColor = getHeaderColor()
-      
-      chrome.runtime.sendMessage({ url:window.location.origin,portalLogo: logo,headerColor:headerColor });
-      });
+      if (headerColor || logo) {
+      chrome.runtime.sendMessage({ status:"loaded",url:window.location.origin,logo: logo,headerColor:headerColor });
+      }
+}
+if (
+    document.readyState === "complete" ||
+    (document.readyState !== "loading" && !document.documentElement.doScroll)
+) {
+  callback();
+} else {
+  document.addEventListener("DOMContentLoaded", callback);
+}   
 `})
 }
 
-function getDOM (url) {
-    let xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            return this.responseXML
-        }
-    };
-    xhr.responseType = "document";
-    xhr.open("GET",url + "?" + Date.now(), true);
-    xhr.send();
-}
 
 function getSubTasks(result) {
     var subtasksNames = result.querySelectorAll('#issuetable tr td.stsummary a');
@@ -209,4 +195,39 @@ function getSubTasks(result) {
         subtasks.push({name:subtasksNames[i].text,type:issueTypes[i].getAttribute('alt'),estimate:estimate[i]});
     }
     chrome.runtime.sendMessage({from:'Jira',subtasks:subtasks});
+}
+
+function detectPortal(tab) {
+    chrome.tabs.executeScript(tab.id, {code:`
+    function checkIfPortal () {
+        var scripts = document.querySelectorAll('head script');
+        var isPortal = false;
+        for (script of scripts) {
+            if (script.innerHTML.indexOf('Playtech') > -1) {
+                isPortal = true;
+                break;
+            }
+        }
+        return isPortal;
+    }
+    checkIfPortal();                                        
+`},function (isPortal) {
+        if (isPortal && isPortal[0]) {
+            portalTab = tab;
+            getHeaderData(tab);
+            getVersionJson(tab);
+        }
+    });
+}
+
+
+function getHeaderData(tab) {
+    let tabOriginUrl = new URL(tab.url).origin;
+    let data = headerData.find(function (data) {
+        return data.url === tabOriginUrl
+    });
+
+    data
+        ? chrome.runtime.sendMessage({header:data})
+        : getPortalLogoAndBackground(tab)
 }

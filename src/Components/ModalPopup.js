@@ -22,7 +22,7 @@ class ModalPopup extends React.Component {
     render() {
         return (
             <div>
-                <Button size={this.props.buttonsize} color={this.props.buttoncolor} onClick={this.toggle}>{this.props.buttonLabel}</Button>
+                <h6><b>Last Commit: </b><Button size={this.props.buttonsize} color={this.props.buttoncolor} onClick={this.toggle}>{this.props.buttonLabel}</Button> </h6>
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
                     <ModalHeader toggle={this.toggle}>{this.props.buttonLabel}</ModalHeader>
                     <ModalBody>

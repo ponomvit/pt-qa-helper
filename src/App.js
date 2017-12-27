@@ -11,60 +11,65 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            isOpened:false,
-            isPortal:false,
-            url:"",
-            portalLogo:"",
-            headerColor:"#222"
+            headerOptions:{},
+            version:""
         };
         this.onMessageListener = this.onMessageListener.bind(this);
-        this.sendOpenState = this.sendOpenState.bind(this)
+        this.getHeaderOptionOnStart = this.getHeaderOptionOnStart.bind(this);
+        this.getVersionOnStart = this.getVersionOnStart.bind(this);
+        this.onMessageListener();
     }
+
 
     onMessageListener() {
         chrome.runtime.onMessage.addListener((message, sender, response) => {
-            console.log('message - ');
             console.log(message);
-
-            message.headerColor ? this.setState({
-                    headerColor:message.headerColor,
-                    portalLogo:message.portalLogo
-                }) : null;
-
-            this.setState({
-                isPortal:message.isPortal,
-                url:message.url,
-                version:message.version
-            })
+            if (message.header && message.header.status === "loaded") {
+                this.setState({
+                    headerOptions:message.header
+                })
+            }
+            message.version && message.version !== this.state.version
+                ? this.setState({
+                    version:message.version
+                })
+                : null;
         });
     }
 
-    sendOpenState() {
-        chrome.runtime.sendMessage({isOpened: true});
+    getHeaderOptionOnStart() {
+        chrome.runtime.sendMessage({getHeaderData:true});
+    }
+    getVersionOnStart() {
+        chrome.runtime.sendMessage({getVersion: true},(response) =>
+            this.setState({
+                version: response.version
+            })
+        );
     }
 
     componentWillMount() {
-        this.onMessageListener();
-        this.sendOpenState();
+        this.getHeaderOptionOnStart();
+        this.getVersionOnStart();
     }
     render() {
-
-        let portalLogo = `${this.state.url}${this.state.portalLogo}`;
+        let url = this.state.headerOptions.url ? this.state.headerOptions.url.replace(/^https?\:\/\//i, "") : "nety :(("
+        let portalLogo = `${this.state.headerOptions.url}${this.state.headerOptions.logo}`;
     return (
         <Container fluid>
             <Row>
                 <Col>
                     <div className="App">
-                        <header className="App-header" style={{backgroundColor:this.state.headerColor}}>
-                            {this.state.portalLogo
+                        <header className="App-header" style={{backgroundColor:this.state.headerOptions.headerColor}}>
+                            {this.state.headerOptions.logo
                                 ? <img height={36} src={portalLogo}/>
                                 : null
                             }
-                            <h5 className="App-title">{this.state.url}</h5>
+                            <h5 className="App-title">{url}</h5>
                             <EnvButtons/>
                         </header>
                         <div>
-                            <VersionBlock isPortal={this.state.isPortal} url={this.state.url} version={this.state.version}/>
+                            <VersionBlock url={this.state.headerOptions.url} version={this.state.version}/>
                         </div>
                         <div>
                         </div>

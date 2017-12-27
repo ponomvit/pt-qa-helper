@@ -12,6 +12,9 @@ class VersionBlock extends Component {
         this.copyPassedResult = this.copyPassedResult.bind(this);
         this.copyFailedResult = this.copyFailedResult.bind(this);
     }
+    componentWillReceiveProps(nextProps) {
+        console.log(nextProps)
+    }
 
     copyPassedResult(){
         let passComment = `{panel:title=PT QA Test Results|borderColor=#828282|titleBGColor=#7EC45C|bgColor=#E1FADE}
@@ -49,28 +52,25 @@ class VersionBlock extends Component {
 
     render() {
         const version = this.props.version;
-        const isPortal = this.props.isPortal;
         return (
             <div>
-                {(isPortal && version) ? (
+                {version ? (
                     <Jumbotron fluid>
                         <Container fluid>
                             <div>
                                 {/*<span>{this.state.url}</span><DropdownButton/>*/}
-                                <h6>WPL Version <Badge>{version.WPL_Version}</Badge></h6>
-                                <h6>Licensee Version <Badge>{version.Licensee_Version}</Badge></h6>
-                                <h6>Build number <Badge>{version.Build_Number}</Badge></h6>
-                                <h6>Build created <Badge>{version.Build_Created}</Badge></h6>
-                                <h6>Build from branch <Badge>{version.Built_From.replace('refs/heads/', '')}</Badge></h6>
-                                <h6>Package name <Badge>{version.Package_Name}</Badge></h6>
-                                <h6>Node <Badge>{version.Node_FQDN}</Badge></h6>
-                                <h6>Last Commit <Badge>{version.WPL_Git_Log[1].split(' |')[1].trim()}</Badge>
-                                    <ModalPopup buttoncolor="link" buttonLabel="View all">
+                                <h6> <b>WPL Version: </b>{version.WPL_Version}</h6>
+                                <h6> <b>Licensee Version: </b>{version.Licensee_Version}</h6>
+                                <h6> <b>Build number: </b>{version.Build_Number}</h6>
+                                <h6> <b>Build created: </b>{version.Build_Created}</h6>
+                                <h6> <b>Build from branch: </b>{version.Built_From.replace('refs/heads/', '')}</h6>
+                                <h6> <b>Package name: </b>{version.Package_Name}</h6>
+                                <h6><b>Node: </b>{version.Node_FQDN}</h6>
+                                    <ModalPopup buttoncolor="link" buttonLabel={version.WPL_Git_Log[1].split(' |')[1].trim()}>
                                         {Object.values(version.WPL_Git_Log).map((value,i) =>
                                             <p key={i}>{value}</p>
                                         )}
                                     </ModalPopup>
-                                </h6>
                                 <p className="lead">
                                 </p>
                                 <hr className="my-2" />
