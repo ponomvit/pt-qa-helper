@@ -68,7 +68,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             inject: true,
             chunks: ['popup'],
-            filename: './dist/popup.html',
+            filename: './popup.html',
             template: './src/popup.html'
         }),
         // copy extension manifest and icons
