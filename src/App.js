@@ -20,7 +20,6 @@ class App extends Component {
         this.onMessageListener();
     }
 
-
     onMessageListener() {
         chrome.runtime.onMessage.addListener((message, sender, response) => {
             console.log(message);
