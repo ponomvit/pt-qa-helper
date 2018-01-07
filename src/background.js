@@ -65,15 +65,15 @@ chrome.runtime.onMessage.addListener(function (message, sender, response) {
     console.log('all messages log');
     console.log(message);
 
-    message.getHeaderData ? checkTab(portalTab) : null;
-    message.getVersion ? response({version:state.version}) : null;
+    message.getHeaderData ? getHeaderData(portalTab) : null;
+    message.getVersion ? getVersionJson(portalTab) : null;
 
     if (message.status === "loaded") {
         console.log('received msg from client logo , bg , url etc...');
 
         console.log(message);
         headerData.push(message);
-        chrome.runtime.sendMessage({header:message})
+        chrome.runtime.sendMessage({header:message, tabId:portalTab.id})
     }
 
     message.fastLoad
@@ -91,7 +91,7 @@ function getVersionJson(tab) {
 
     function handleErrors(response) {
         if (!response.ok) {
-            chrome.runtime.sendMessage({version:null});
+            chrome.runtime.sendMessage({version:'error'});
             throw Error(response.status + " " + response.statusText);
         }
         return response;
@@ -214,6 +214,7 @@ function detectPortal(tab) {
     checkIfPortal();                                        
 `},function (isPortal) {
         if (isPortal && isPortal[0]) {
+            chrome.runtime.sendMessage({tabId:tab.id});
             portalTab = tab;
             getHeaderData(tab);
             getVersionJson(tab);
@@ -229,6 +230,6 @@ function getHeaderData(tab) {
     });
 
     data
-        ? chrome.runtime.sendMessage({header:data})
+        ? chrome.runtime.sendMessage({header:data, tabId: tab.id})
         : getPortalLogoAndBackground(tab)
 }

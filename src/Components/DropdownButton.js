@@ -20,13 +20,10 @@ export default class DropdownButton extends React.Component {
     render() {
         return (
             <ButtonDropdown isOpen={this.state.dropdownOpen} toggle={this.toggle}>
-                <DropdownToggle caret>
-                    {this.props.name}
-                </DropdownToggle>
-                <DropdownMenu right>
-                    <DropdownItem>Another Action</DropdownItem>
-                    <DropdownItem divider />
-                    <DropdownItem>Another Action</DropdownItem>
+                <Button cardtype={this.props.cardtype} color={this.props.color} onClick={this.props.onClick}>{this.props.name}</Button>
+                <DropdownToggle caret color={this.props.color} />
+                <DropdownMenu>
+                    {this.props.children}
                 </DropdownMenu>
             </ButtonDropdown>
         );

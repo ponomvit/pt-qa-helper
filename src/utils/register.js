@@ -1,9 +1,3 @@
-/*global chrome*/
-import React, { Component } from 'react';
-import QRCodeModal from './QRcode'
-import { ButtonGroup, Button } from 'reactstrap';
-
-const registerScript = `
 var n = Math.floor((Math.random() * 100000) + 1);
 var userName = 'User' + n;
 /*var event = new Event('change');*/
@@ -184,7 +178,7 @@ if ($address3) {
     $address3.value = '123';
 }
 
-var $phone = document.querySelector('[name=cellphone]') ? document.querySelector('[name=cellphone]') : document.querySelector('[name=phonenumber]');
+var $phone = document.querySelector('[name=cellphone]');
 if ($phone) {
     $phone.value = '+441231231232';
 }
@@ -197,11 +191,14 @@ var $userName = document.querySelector('[name=userName]');
 if ($userName) {
     $userName.value = userName;
 }
-var $password = document.querySelectorAll('[type=password]').length > 0 ? document.querySelectorAll('[type=password]') : document.querySelectorAll('[name=password]') ;
+var $password = document.querySelector('[name=password]');
 if ($password) {
-    $password.forEach((field)=> field.value = 'Password1!')
+    $password.value = 'Password1!';
 }
-
+var $passwordVerify = document.querySelector('[name=passwordVerify]');
+if ($passwordVerify) {
+    $passwordVerify.value = 'Password1!';
+}
 var $verificationQuestion = document.querySelector('[name=verificationQuestion]');
 if ($verificationQuestion) {
     $verificationQuestion.value = 'testQuestion';
@@ -238,43 +235,5 @@ checkboxes.forEach(function(item) {
  $regiterBtn.click()
  }*/
 if ($password) {
-    console.warn("Username: " + userName + " Password: " + $password.value);
+    console.log("Username: " + userName + " Password: " + $password.value);
 }
-`;
-
-class EnvButtons extends Component {
-    constructor(props) {
-        super(props);
-        this.showTranslationKeys = this.showTranslationKeys.bind(this);
-        this.enableJsFastLoad = this.enableJsFastLoad.bind(this);
-        this.register = this.register.bind(this)
-    }
-
-    showTranslationKeys() {
-        chrome.runtime.sendMessage({showKeys: true});
-    }
-
-    enableJsFastLoad() {
-        chrome.runtime.sendMessage({fastLoad: true});
-    }
-
-    register() {
-        chrome.tabs.executeScript(this.props.tabId, {code: registerScript})
-    }
-
-
-    render() {
-        return (
-            <div>
-                <ButtonGroup>
-                    <Button outline color="info" onClick={this.showTranslationKeys}>Translation Keys</Button>{' '}
-                    <Button outline color="info" onClick={this.enableJsFastLoad}>Fast Load</Button>{' '}
-                <QRCodeModal/>
-                </ButtonGroup>
-                    <Button onClick={this.register}>Register</Button>
-            </div>
-        );
-    }
-}
-
-export default EnvButtons;

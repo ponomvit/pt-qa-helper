@@ -1,16 +1,20 @@
 /*global chrome*/
 import React, { Component } from 'react';
-import logo from './assets/icon-logo.svg';
-import EnvButtons from './Components/EnvButtons'
 import './App.css';
+import logo from './assets/icon-logo.svg';
+import CreditCardGenerator from './Components/CreditCardGenerator'
+import EnvButtons from './Components/EnvButtons'
+import TestResult from './Components/TestResult'
 import VersionBlock from './Components/VersionBlock'
-import { Container, Row, Col } from 'reactstrap';
+import DevStamp from './Components/DevStamp'
+import { Jumbotron, Container, Row, Col } from 'reactstrap';
 
 class App extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
+            tabId:'',
             headerOptions:{},
             version:""
         };
@@ -23,6 +27,9 @@ class App extends Component {
     onMessageListener() {
         chrome.runtime.onMessage.addListener((message, sender, response) => {
             console.log(message);
+            message.tabId ? this.setState({
+                tabId:message.tabId
+                }) : null;
             if (message.header && message.header.status === "loaded") {
                 this.setState({
                     headerOptions:message.header
@@ -40,11 +47,7 @@ class App extends Component {
         chrome.runtime.sendMessage({getHeaderData:true});
     }
     getVersionOnStart() {
-        chrome.runtime.sendMessage({getVersion: true},(response) =>
-            this.setState({
-                version: response.version
-            })
-        );
+        chrome.runtime.sendMessage({getVersion: true});
     }
 
     componentWillMount() {
@@ -55,27 +58,48 @@ class App extends Component {
         let url = this.state.headerOptions.url ? this.state.headerOptions.url.replace(/^https?\:\/\//i, "") : "nety :(("
         let portalLogo = `${this.state.headerOptions.url}${this.state.headerOptions.logo}`;
     return (
-        <Container fluid>
-            <Row>
-                <Col>
-                    <div className="App">
+        <div className="App">
+                <Row>
+                    <Col>
+                        {this.state.headerOptions.logo ?
                         <header className="App-header" style={{backgroundColor:this.state.headerOptions.headerColor}}>
                             {this.state.headerOptions.logo
                                 ? <img height={36} src={portalLogo}/>
                                 : null
                             }
-                            <h5 className="App-title">{url}</h5>
-                            <EnvButtons/>
+                            <div>
+                                <h5 className="App-title">{url}</h5>
+                                <EnvButtons tabId={this.state.tabId}/>
+                            </div>
                         </header>
-                        <div>
-                            <VersionBlock url={this.state.headerOptions.url} version={this.state.version}/>
-                        </div>
-                        <div>
-                        </div>
-                    </div>
-                </Col>
-            </Row>
-        </Container>
+                            : <div>No data</div>}
+                    </Col>
+                </Row>
+            <Jumbotron fluid>
+                <Row>
+                    <Col xs="8">
+                        <VersionBlock url={this.state.headerOptions.url} version={this.state.version}/>
+                    </Col>
+                    <Col>
+                        <TestResult version={this.state.version} url={this.state.headerOptions.url}/>
+                    </Col>
+                </Row>
+            </Jumbotron>
+            <hr className="my-2" />
+                <Row>
+                    <Col xs="4">
+                        <DevStamp/>
+                    </Col>
+                    <Col>
+                        <CreditCardGenerator/>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+
+                    </Col>
+                </Row>
+        </div>
     );
     }
 }

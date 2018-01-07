@@ -6,3 +6,11 @@ body {
 button,a {
   cursor: pointer;
 }
+
+h6 {
+  white-space: nowrap;
+}
+
+.modal-body.commits-modal-body {
+  padding: 0 15px;
+}

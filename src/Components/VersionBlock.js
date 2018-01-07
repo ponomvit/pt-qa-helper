@@ -1,98 +1,50 @@
 /*global chrome*/
 import React, { Component } from 'react';
-import { Jumbotron, Container, ButtonGroup, Button, Alert , Badge } from 'reactstrap';
-import ModalPopup from "./ModalPopup"
-import DropdownButton from "./DropdownButton"
-import copy from 'copy-to-clipboard';
-const platform = require('platform');
+import { Container,Col,Progress } from 'reactstrap';
+import CommitsModalPopup from './CommitsModalPopup'
 
 class VersionBlock extends Component {
     constructor(props) {
         super(props);
-        this.copyPassedResult = this.copyPassedResult.bind(this);
-        this.copyFailedResult = this.copyFailedResult.bind(this);
     }
     componentWillReceiveProps(nextProps) {
         console.log(nextProps)
     }
 
-    copyPassedResult(){
-        let passComment = `{panel:title=PT QA Test Results|borderColor=#828282|titleBGColor=#7EC45C|bgColor=#E1FADE}
-                            | *Test Status:* | (/) Test is OK |
-                            | *Test scope/Notes:* | No issues were found |
-                            | *Device/OS/Browser:* | ${platform.os} ${platform.name} ${platform.version} |
-                            | *Env URL:* | ${this.props.url} |
-                            | *WPL Version:* | ${this.props.version.WPL_Version} |
-                            | *Licensee version:* | ${this.props.version.Licensee_Version} |
-                            | *Build number:* | ${this.props.version.Build_Number} |
-                            | *Build created:* | ${this.props.version.Build_Created} | 
-                            | *Build from branch:* | ${this.props.version.Built_From.replace('refs/heads/', '')} | 
-                            | *Package name:* | ${this.props.version.Package_Name} | 
-                            | *Last Commit hash:* | ${this.props.version.WPL_Git_Log[1].split(' |')[1].trim()} | 
-                            {panel}`;
-        copy(passComment)
-    }
-    copyFailedResult(){
-        let failComment = `{panel:title=PT QA Test Results|borderColor=#828282|titleBGColor=#ff7f7f|bgColor=#FFF4F0}
-                             | *Test Status:* | (x) Ticket Reopened |
-                             | *Test scope/Notes:* | Issue is reproduced again |
-                             | *Device/OS/Browser:* | ${platform.os} ${platform.name} ${platform.version} |
-                             | *Env URL:* | ${this.props.url} |
-                             | *WPL Version:* | ${this.props.version.WPL_Version} |
-                             | *Licensee version:* | ${this.props.version.Licensee_Version} |
-                             | *Build number:* | ${this.props.version.Build_Number} |
-                             | *Build created:* | ${this.props.version.Build_Created} | 
-                             | *Build from branch:* | ${this.props.version.Built_From.replace('refs/heads/', '')} | 
-                             | *Package name:* | ${this.props.version.Package_Name} | 
-                             | *Last Commit hash:* | ${this.props.version.WPL_Git_Log[1].split(' |')[1].trim()} | 
-                             {panel}`;
-        copy(failComment)
-    }
-
-
     render() {
-        const version = this.props.version;
-        return (
-            <div>
-                {version ? (
-                    <Jumbotron fluid>
-                        <Container fluid>
-                            <div>
-                                {/*<span>{this.state.url}</span><DropdownButton/>*/}
-                                <h6> <b>WPL Version: </b>{version.WPL_Version}</h6>
-                                <h6> <b>Licensee Version: </b>{version.Licensee_Version}</h6>
-                                <h6> <b>Build number: </b>{version.Build_Number}</h6>
-                                <h6> <b>Build created: </b>{version.Build_Created}</h6>
-                                <h6> <b>Build from branch: </b>{version.Built_From.replace('refs/heads/', '')}</h6>
-                                <h6> <b>Package name: </b>{version.Package_Name}</h6>
-                                <h6><b>Node: </b>{version.Node_FQDN}</h6>
-                                    <ModalPopup buttoncolor="link" buttonLabel={version.WPL_Git_Log[1].split(' |')[1].trim()}>
-                                        {Object.values(version.WPL_Git_Log).map((value,i) =>
-                                            <p key={i}>{value}</p>
-                                        )}
-                                    </ModalPopup>
-                                <p className="lead">
-                                </p>
-                                <hr className="my-2" />
-                                <div>
-                                    <h5>
-                                        Test Result
-                                    </h5>
-                                    <ButtonGroup>
-                                        <Button color="success" onClick={this.copyPassedResult}>Passed</Button>
-                                        <Button color="danger" onClick={this.copyFailedResult}>Failed</Button>
-                                        <ModalPopup buttoncolor="link" buttonLabel="Edit">
-                                            123
-                                        </ModalPopup>
-                                    </ButtonGroup>
-                                </div>
-                            </div>
-                        </Container>
-                    </Jumbotron>
-                        ) : null
-                    }
-            </div>
-        );
+        let version = this.props.version;
+        const svg =
+            <svg version="1.1" width={300} height={300} xmlns="http://www.w3.org/2000/svg"
+                 xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 1000 1000"
+                 enableBackground="new 0 0 1000 1000" xmlSpace="preserve">
+                <g><g transform="translate(0.000000,511.000000) scale(0.100000,-0.100000)">
+                <path d="M2854.6,4424c-53.3-19.2-59.6-51.1-91.6-381.3c-34.1-343-27.7-326-142.7-368.6c-95.9-34.1-110.8-34.1-208.8-2.1c-104.4,34.1-545.4,55.4-573.1,27.7c-10.7-10.7,933.1-2484.1,956.6-2507.5c19.2-19.2,164,89.5,274.8,208.8c104.4,115,262.1,385.6,294,504.9c8.5,27.7,44.7,59.6,93.7,81c166.2,68.2,157.6,72.4,400.5-147c257.8-232.2,283.4-249.3,347.3-223.7c49,17,85.2,106.5,59.6,147c-21.3,34.1-583.7,532.6-600.8,532.6c-10.7,0-66-19.2-125.7-40.5l-108.7-42.6l-12.8,174.7c-8.5,95.9-27.7,223.7-44.7,285.5l-29.8,108.6l164,59.7c304.7,108.7,385.6,151.3,385.6,200.3c0,72.4-40.5,127.8-93.7,127.8c-27.7,0-161.9-42.6-298.3-93.7l-247.1-93.7l-32,57.5c-51.1,100.1-223.7,298.3-334.5,385.6c-102.3,80.9-102.3,85.2-51.1,98c29.8,6.4,63.9,25.6,76.7,40.5c36.2,42.6,110.8,771.2,85.2,820.2C2971.8,4430.4,2914.3,4447.4,2854.6,4424z M2590.5,3373.7c232.2-172.6,415.4-426.1,507-703c49-149.1,57.5-208.8,57.5-438.9c2.1-253.5-29.8-447.4-70.3-447.4c-46.9,0-230.1,196-343,366.4c-193.9,294-319.6,692.4-319.6,1003.4c0,168.3,21.3,291.9,46.9,291.9C2481.8,3446.1,2535.1,3414.1,2590.5,3373.7z"/><path d="M1357,4223.7c-219.4-100.1-347.3-349.4-296.1-585.9c12.8-57.5,32-110.8,42.6-119.3c10.6-6.4,55.4,17.1,100.1,51.1c187.5,149.1,441,255.7,713.7,302.5c132.1,23.4,142.7,29.8,130,72.4c-23.4,74.6-112.9,181.1-206.6,242.9c-72.4,46.9-112.9,57.5-247.1,63.9C1482.7,4253.5,1408.1,4245,1357,4223.7z"/><path d="M1322.9,3471.7c-112.9-83.1-266.3-251.4-326-357.9c-38.4-68.2-70.3-93.7-153.4-123.6l-102.3-38.4L521.8,3150c-294,262-302.5,266.3-368.6,223.7c-36.2-23.4-53.3-55.4-53.3-93.7c0-46.9,53.3-102.3,289.7-311c281.2-247.1,289.7-251.4,368.6-238.6l83.1,12.8l-21.3-91.6c-21.3-89.5-10.7-509.2,12.8-568.8c10.7-25.6-46.9-57.5-245-138.5c-287.6-117.2-330.2-157.7-266.3-255.7c19.2-29.8,51.1-53.3,72.4-53.3c19.2,0,136.4,44.7,259.9,95.9c123.6,53.3,232.2,95.9,245,95.9c10.7,0,49-53.3,83.1-119.3c34.1-63.9,104.4-164,155.5-221.6c49-55.4,91.6-106.5,91.6-112.9c0-4.3-42.6-25.6-95.9-46.9c-53.3-19.2-110.8-57.5-125.7-80.9c-44.7-72.4-110.8-773.4-76.7-813.8c34.1-40.5,136.3-40.5,170.4-2.1c12.8,17.1,40.5,176.8,59.6,355.8l36.2,325.9l117.2,46.9l119.3,46.9l151.3-72.4c181.1-87.4,392-136.3,581.6-134.2c262,4.3,289.7-134.2-253.5,1280.4c-264.2,688.1-487.9,1252.7-494.3,1252.7C1412.3,3531.3,1367.6,3503.6,1322.9,3471.7z M1231.3,2849.6c181.1-144.9,389.9-490,498.5-830.9c44.7-138.5,59.6-238.6,68.2-426.1c6.4-134.2,2.1-266.3-8.5-291.9l-17-49l-108.7,72.4c-262,176.8-487.9,500.7-575.2,822.4c-61.8,238.6-36.2,767,38.4,767C1139.6,2913.5,1184.4,2883.7,1231.3,2849.6z"/><path d="M4595.2,1100.5C3152.9,974.8,1889.6,467.8,1195-265.1C562.3-932,449.4-1713.8,881.9-2440.3c147-251.4,558.2-660.4,869.2-865c660.4-434.6,1497.7-724.3,2524.6-869.2c383.5-53.3,1597.8-53.3,1981.3,0c1031.1,147,1847.1,428.2,2511.8,867.1C9497.3-2823.8,9900-2201.7,9900-1562.5c-2.1,492.1-189.6,909.7-596.5,1325.1c-700.9,713.7-1896.1,1195.2-3300,1327.2C5630.6,1126.1,4942.5,1130.3,4595.2,1100.5z M5775.5,459.2c93.7-21.3,230.1-68.2,302.5-102.3c132.1-59.6,134.2-61.8,115.1-121.4c-10.7-32-255.7-892.6-545.4-1913.1c-289.7-1018.3-534.7-1862-543.3-1872.7c-25.6-27.7-387.7,44.8-571,117.2c-219.4,85.2-219.4,85.2-196,159.8c17.1,44.8,905.4,3146.7,1071.6,3732.5c19.2,66,21.3,68.2,108.7,55.4C5566.7,508.2,5683.9,482.7,5775.5,459.2z M4126.5-595.3v-315.3l-688.1-274.8c-377.1-151.3-692.4-281.2-700.9-287.6c-6.4-6.4,300.4-138.5,681.7-291.9l696.7-279.1l6.4-321.7l6.4-319.6l-894.8,372.8c-709.4,296.1-899,383.5-911.8,419.7c-19.2,61.8-12.8,709.4,8.5,801l19.2,74.6l871.3,366.4c481.5,202.4,879.9,366.4,890.5,368.6C4120.1-282.2,4126.5-422.8,4126.5-595.3z M7290.2-642.2c477.2-198.1,877.7-370.7,890.5-383.5c25.6-25.6,49-679.6,27.7-813.8l-14.9-93.8l-877.7-368.6c-483.6-200.3-890.5-366.4-905.4-366.4c-19.2,0-25.6,78.8-25.6,306.8v304.6l703,285.5c387.7,155.5,703,289.7,703,296.1c0,6.4-315.3,136.3-698.8,287.6l-696.7,279.1l-6.4,313.2c-2.1,174.7,2.1,313.2,12.8,313.2C6412.5-282.2,6813-444.1,7290.2-642.2z"/></g></g>
+            </svg>;
+                if (version && version !== 'error') {
+                    return(
+                            <Col>
+                                {version.WPL_Version ? (<div><h6> <b>WPL Version: </b>{version.WPL_Version}</h6><hr className="my-2" /></div>) : null}
+                                {version.Licensee_Version ? <div><h6><b>Licensee Version: </b>{version.Licensee_Version}</h6><hr className="my-2" /></div> : null}
+                                {version.Build_Number ? <div><h6> <b>Build number: </b>{version.Build_Number}</h6><hr className="my-2" /></div> : null}
+                                {version.Build_Created ? <div><h6> <b>Build created: </b>{version.Build_Created}</h6><hr className="my-2" /></div> : null}
+                                {version.Built_From ? <div><h6> <b>Build from branch: </b>{version.Built_From.replace('refs/heads/', '')}</h6><hr className="my-2" /></div> : null}
+                                {version.Package_Name ? <div><h6> <b>Package: </b>{version.Package_Name}</h6><hr className="my-2" /></div> : null}
+                                {version.Node_FQDN ? <div><h6><b>Node: </b>{version.Node_FQDN}</h6><hr className="my-2" /></div> : null}
+                                {version.WPL_Git_Log ? <CommitsModalPopup commits={version.WPL_Git_Log}/> : null}
+                            </Col>
+                    )
+                } else if (version === 'error') {
+                    return (
+                    <div align='center'> <br/> Can't get version :( <br/> {svg} </div>
+                    )
+                } else {
+                    return (
+                        <Col>
+                            <h5> Loading data ... </h5>
+                            <Progress align='center' animated color="info" value="100" />
+                        </Col>
+                    )
+                }
     }
 }
 
