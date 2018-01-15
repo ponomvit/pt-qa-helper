@@ -1,6 +1,5 @@
 /*global chrome*/
 import React, { Component } from 'react';
-import QRCodeModal from './QRcode'
 import { ButtonGroup, Button } from 'reactstrap';
 
 const registerScript = `
@@ -237,41 +236,31 @@ checkboxes.forEach(function(item) {
  if ($regiterBtn) {
  $regiterBtn.click()
  }*/
-if ($password) {
-    console.warn("Username: " + userName + " Password: " + $password.value);
+if ($userName) {
+    console.warn("Username: " + userName + " Password: " + $password[0].value);
 }
 `;
 
 class EnvButtons extends Component {
-    constructor(props) {
-        super(props);
-        this.showTranslationKeys = this.showTranslationKeys.bind(this);
-        this.enableJsFastLoad = this.enableJsFastLoad.bind(this);
-        this.register = this.register.bind(this)
-    }
 
-    showTranslationKeys() {
-        chrome.runtime.sendMessage({showKeys: true});
-    }
+    showTranslationKeys = () => {
+        chrome.tabs.update(this.props.tab.tabId,{url:`${this.props.tab.url}?showTranslationKeys=1`})
+    };
 
-    enableJsFastLoad() {
-        chrome.runtime.sendMessage({fastLoad: true});
-    }
+    enableJsFastLoad = () => {
+        chrome.tabs.update(this.props.tab.tabId,{url:`${this.props.tab.url}?js_fast_load`})
+    };
 
-    register() {
-        chrome.tabs.executeScript(this.props.tabId, {code: registerScript})
-    }
-
+    register = () => {
+        chrome.tabs.executeScript(this.props.tab.tabId, {code: registerScript})
+    };
 
     render() {
         return (
             <div>
-                <ButtonGroup>
-                    <Button outline color="info" onClick={this.showTranslationKeys}>Translation Keys</Button>{' '}
-                    <Button outline color="info" onClick={this.enableJsFastLoad}>Fast Load</Button>{' '}
-                <QRCodeModal/>
-                </ButtonGroup>
-                    <Button onClick={this.register}>Register</Button>
+                <Button color={this.props.tab.url && this.props.tab.url.indexOf('fortuna') > 1 ? 'secondary' : 'warning'} onClick={this.showTranslationKeys}>Translation Keys</Button>{' '}
+                <Button color={this.props.tab.url && this.props.tab.url.indexOf('fortuna') > 1 ? 'secondary' : 'warning'} onClick={this.enableJsFastLoad}>Fast Load</Button>{' '}
+                <Button color={this.props.tab.url && this.props.tab.url.indexOf('fortuna') > 1 ? 'secondary' : 'warning'} onClick={this.register}>Register</Button>{' '}
             </div>
         );
     }

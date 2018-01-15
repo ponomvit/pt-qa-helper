@@ -7,31 +7,25 @@ import copy from 'copy-to-clipboard';
 
 class DevStampModal extends React.Component {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            modal: false,
-            isAlertVisible: false,
-            alertColor:'dark',
-            alertMessage:''
-        };
-        this.toggle = this.toggle.bind(this);
-        this.removeToast = this.removeToast.bind(this);
-        this.clearForm = this.clearForm.bind(this);
-        this.copyToClipboard = this.copyToClipboard.bind(this);
-    }
-    removeToast (t=2000) {
+    state = {
+        modal: false,
+        isAlertVisible: false,
+        alertColor:'dark',
+        alertMessage:''
+    };
+
+    removeToast = (t=2000) => {
         setTimeout(() => this.setState({
             isAlertVisible:false
         }),t)
-    }
-    toggle() {
+    };
+    toggle = () => {
         this.setState({
             modal: !this.state.modal,
             isAlertVisible: false
         });
-    }
-    clearForm() {
+    };
+    clearForm = () => {
         document.querySelector('.dev-form').reset();
         this.setState({
             alertMessage:'Form is cleared',
@@ -40,15 +34,15 @@ class DevStampModal extends React.Component {
         this.removeToast()
     }
 
-    copyToClipboard(){
+    copyToClipboard = () => {
         let form = document.querySelector('.dev-form');
         let [whatWasDoneValue,affectedAreasValue,levelOfImplementationValue,gitUrlValue,commentValue] = Array.from(form.elements).map((field)=> field.value);
 
         let whatWasDoneRow = whatWasDoneValue ? `| *What was done: * | ${whatWasDoneValue} |` : '';
         let affectedAreasRow = affectedAreasValue ? `| *Affected areas: * | ${affectedAreasValue} |` : '';
         let levelOfImplementationRow =  levelOfImplementationValue ? `| *Level of implementation: * | ${levelOfImplementationValue} |` : '';
-        let gitCommitUrlRow = gitUrlValue ? `| *GitLab commit URL:* | [Commit|${gitUrlValue}] |` : '';
-        let commentRow = commentValue ? `| *Comment:* | ${commentValue} |` : '';
+        let gitCommitUrlRow = gitUrlValue ? `| *GitLab commit URL: * | [Commit|${gitUrlValue}] |` : '';
+        let commentRow = commentValue ? `| *Comment: * | ${commentValue} |` : '';
 
         let devComment =
                         `{panel:title=Fix stamp|borderColor=#828282|titleBGColor=#86BBD6|bgColor=#D7E8F0}
@@ -64,7 +58,7 @@ class DevStampModal extends React.Component {
             alertMessage:'Copied.'
         });
         this.removeToast()
-    }
+    };
 
     render() {
         return (
@@ -76,11 +70,11 @@ class DevStampModal extends React.Component {
                         <Form onSubmit={this.submit} className="dev-form">
                             <FormGroup>
                                 <Label for="what-was-done">What was done: </Label>
-                                <Input type="textarea" name="text" id="dev-what-was-done" placeholder="What was done"/>
+                                <Input type="textarea" name="text" id="dev-what-was-done" placeholder="What was done (optional)"/>
                             </FormGroup>
                             <FormGroup>
                                 <Label for="affected-areast">Affected areas: </Label>
-                                <Input type="textarea" name="text" id="dev-affected-areas" placeholder="Affected areas"/>
+                                <Input type="textarea" name="text" id="dev-affected-areas" placeholder="Affected areas (optional)"/>
                             </FormGroup>
                             <FormGroup>
                                 <Label for="dev-impl-level">Level of implementation: </Label>
@@ -91,12 +85,12 @@ class DevStampModal extends React.Component {
                                 </Input>
                             </FormGroup>
                             <FormGroup>
-                                <Label for="dev-git-url">GitLab commit URL:</Label>
+                                <Label for="dev-git-url">GitLab branch name/commit URL: </Label>
                                 <Input type="url" name="url" id="dev-git-url" placeholder="https://..." />
                             </FormGroup>
                             <FormGroup>
                                 <Label for="dev-comment">Comment: </Label>
-                                <Input type="textarea" name="text" id="dev-comment" placeholder="Comment"/>
+                                <Input type="textarea" name="text" id="dev-comment" placeholder="Comment (optional)"/>
                             </FormGroup>
                         </Form>
                     </ModalBody>

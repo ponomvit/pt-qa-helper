@@ -7,37 +7,30 @@ import copy from 'copy-to-clipboard';
 import { Container, DropdownItem, InputGroup,InputGroupAddon, Input } from 'reactstrap';
 
 class CreditCardGenerator extends React.Component {
-    constructor(props) {
-        super(props);
+    state = {
+        creditCardNumber: '4111111111111111',
+        isAlertVisible: false,
+        alertMessage: null,
+        alertColor: null
+    };
 
-        this.state = {
-            creditCardNumber: '4111111111111111',
-            isAlertVisible: false,
-            alertMessage: null,
-            alertColor: null
-        };
-        this.generateCreditCardNumber = this.generateCreditCardNumber.bind(this);
-        this.removeToast = this.removeToast.bind(this)
-    }
-
-    removeToast (t=2000) {
+    removeToast = (t=2000) => {
         setTimeout(() => this.setState({
             isAlertVisible:false
         }),t)
-    }
+    };
 
-    generateCreditCardNumber(e) {
-        let number = generator.GenCC(e.target.getAttribute('cardtype'));
+    generateCreditCardNumber = event => {
+        let number = generator.GenCC(event.target.getAttribute('cardtype'));
         copy(number);
         this.setState({
             creditCardNumber: number,
             isAlertVisible: true,
-            alertMessage: `${e.target.getAttribute('cardtype')} card number is successfully copied`,
+            alertMessage: `${event.target.getAttribute('cardtype')} card number is successfully copied`,
             alertColor: 'success'
         });
         this.removeToast();
-
-    }
+    };
 
     render() {
         return (

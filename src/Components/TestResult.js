@@ -7,23 +7,18 @@ const platform = require('platform');
 
 
 class TestResult extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            isAlertVisible: false,
-            alertMessage: null,
-            alertColor: null
-        };
-        this.copyPassedResult = this.copyPassedResult.bind(this);
-        this.copyFailedResult = this.copyFailedResult.bind(this);
-        this.removeToast = this.removeToast.bind(this);
-    }
-    removeToast (t=2000) {
+    state = {
+        isAlertVisible: false,
+        alertMessage: null,
+        alertColor: null
+    };
+
+    removeToast = (t=2000) => {
             setTimeout(() => this.setState({
                 isAlertVisible:false
             }),t)
-    }
-    copyPassedResult() {
+    };
+    copyPassedResult = () => {
     let passComment = `{panel:title=PT QA Test Results|borderColor=#828282|titleBGColor=#7EC45C|bgColor=#E1FADE}
                             | *Test Status:* | (/) Test is OK |
                             | *Test scope/Notes:* | No issues were found |
@@ -45,7 +40,7 @@ class TestResult extends React.Component {
         });
         this.removeToast()
 };
-    copyFailedResult() {
+    copyFailedResult = () => {
     let failComment = `{panel:title=PT QA Test Results|borderColor=#828282|titleBGColor=#ff7f7f|bgColor=#FFF4F0}
                              | *Test Status:* | (x) Ticket Reopened |
                              | *Test scope/Notes:* | Issue is reproduced again |

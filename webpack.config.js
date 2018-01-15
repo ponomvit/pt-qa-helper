@@ -17,6 +17,7 @@ module.exports = {
     // Entry files for our popup and background pages
     entry: {
         popup: './src/popup.js',
+        content: './src/content.js',
         background: './src/background.js'
     },
     // Extension will be built into ./dist folder, which we can then load as unpacked extension in Chrome
@@ -61,6 +62,7 @@ module.exports = {
             }
         ]
     },
+    devtool: "source-map",
     plugins: [
         // create CSS file with all used styles
         new ExtractTextPlugin('bundle.css'),

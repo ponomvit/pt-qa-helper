@@ -2,20 +2,16 @@ import React from 'react';
 import { Button, ButtonDropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
 
 export default class DropdownButton extends React.Component {
-    constructor(props) {
-        super(props);
 
-        this.toggle = this.toggle.bind(this);
-        this.state = {
-            dropdownOpen: false
-        };
-    }
+    state = {
+        dropdownOpen: false
+    };
 
-    toggle() {
+    toggle = () => {
         this.setState({
             dropdownOpen: !this.state.dropdownOpen
         });
-    }
+    };
 
     render() {
         return (

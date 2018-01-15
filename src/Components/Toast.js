@@ -2,16 +2,11 @@ import React from 'react';
 import { Alert } from 'reactstrap';
 
 class Toast extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
+        state = {
             visible: false
         };
-    }
 
     componentWillReceiveProps(nextProps) {
-        console.log(nextProps);
             this.setState({
                 visible:nextProps.visible
             });

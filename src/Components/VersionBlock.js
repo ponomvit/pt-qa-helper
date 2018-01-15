@@ -4,12 +4,6 @@ import { Container,Col,Progress } from 'reactstrap';
 import CommitsModalPopup from './CommitsModalPopup'
 
 class VersionBlock extends Component {
-    constructor(props) {
-        super(props);
-    }
-    componentWillReceiveProps(nextProps) {
-        console.log(nextProps)
-    }
 
     render() {
         let version = this.props.version;

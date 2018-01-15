@@ -5,15 +5,21 @@
   "description": "Very useful QA tool for copying test results and viewing the build information of the current browser tab.",
   "version": "3.0.0",
   "icons": {
-    "64": "assets/icon-logo.svg",
-    "128": "assets/icon-logo.svg"
+    "48": "assets/icon-qa.png",
+    "128": "assets/icon-qa.png"
   },
   "browser_action": {
-    "default_icon": "assets/icon-logo.svg",
+    "default_icon": "assets/icon-qa.png",
     "default_title": "PT QA Helper"
   },
   "background": {
     "scripts": ["background.bundle.js"]
   },
-  "permissions": ["activeTab", "tabs", "storage", "webRequest", "webRequestBlocking", "<all_urls>"]
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.bundle.js"]
+    }
+  ],
+ "permissions": ["activeTab", "tabs", "storage", "webRequest", "webRequestBlocking", "<all_urls>"]
 }

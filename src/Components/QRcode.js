@@ -4,32 +4,32 @@ import QRCode from 'qrcode.react'
 import { Button, Row, Input, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 
 class QRcodeModal extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            modal: false,
-            qrUrl: 'https://www.playtechone.com'
-        };
-        this.toggle = this.toggle.bind(this);
-        this.onChange = this.onChange.bind(this);
-    }
 
-    toggle() {
+    state = {
+        modal: false,
+        qrUrl: ''
+    };
+
+    toggle = () => {
         this.setState({
             modal: !this.state.modal
         });
-    }
+    };
 
-    onChange(e) {
+    onChange = event => {
         this.setState({
-            qrUrl:e.target.value
+            qrUrl:event.target.value
+        })
+    };
+    componentWillReceiveProps(nextProps){
+        this.setState({
+            qrUrl:nextProps.tab.url
         })
     }
-
     render() {
         return (
             <div>
-                <Button color="info" onClick={this.toggle}>QR code</Button>
+                <Button className='float-right' color={this.props.tab.url && this.props.tab.url.indexOf('fortuna') > 1 ? 'secondary' : 'warning'} onClick={this.toggle}>QR code</Button>
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
                     <ModalHeader toggle={this.toggle}>QR Generator</ModalHeader>
                     <ModalBody>

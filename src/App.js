@@ -1,7 +1,7 @@
 /*global chrome*/
 import React, { Component } from 'react';
 import './App.css';
-import logo from './assets/icon-logo.svg';
+import QRCodeModal from './Components/QRcode'
 import CreditCardGenerator from './Components/CreditCardGenerator'
 import EnvButtons from './Components/EnvButtons'
 import TestResult from './Components/TestResult'
@@ -11,66 +11,81 @@ import { Jumbotron, Container, Row, Col } from 'reactstrap';
 
 class App extends Component {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            tabId:'',
-            headerOptions:{},
-            version:""
-        };
-        this.onMessageListener = this.onMessageListener.bind(this);
-        this.getHeaderOptionOnStart = this.getHeaderOptionOnStart.bind(this);
-        this.getVersionOnStart = this.getVersionOnStart.bind(this);
-        this.onMessageListener();
-    }
+    state = {
+        tabData:{},
+        headerOptions:{
+            headerColor:"rgb(36, 80, 149)",
+            logo : './assets/icon-logo-header.png',
+            status : "",
+            url : ""
+        },
+        version:""
+    };
 
-    onMessageListener() {
+    onMessageListener = () => {
         chrome.runtime.onMessage.addListener((message, sender, response) => {
             console.log(message);
-            message.tabId ? this.setState({
-                tabId:message.tabId
+/*            message.tabData ? this.setState({
+                tabData:message.tabData
                 }) : null;
-            if (message.header && message.header.status === "loaded") {
+            if (message.header) {
                 this.setState({
                     headerOptions:message.header
                 })
+            }*/
+            if (message.data && message.data) {
+                this.setState({
+                    tabData:message.data.tabData,
+                    headerOptions:message.data.headerOptions,
+                    version:message.data.version
+                })
             }
+
             message.version && message.version !== this.state.version
                 ? this.setState({
                     version:message.version
                 })
                 : null;
         });
-    }
+    };
 
-    getHeaderOptionOnStart() {
-        chrome.runtime.sendMessage({getHeaderData:true});
-    }
-    getVersionOnStart() {
-        chrome.runtime.sendMessage({getVersion: true});
-    }
 
-    componentWillMount() {
-        this.getHeaderOptionOnStart();
-        this.getVersionOnStart();
+    getData = () => {
+        chrome.runtime.sendMessage({getData: true},(response)=> {
+            //console.log(response.data)
+            let state = response.data;
+            this.setState({
+                tabData:state.tabData,
+                headerOptions:state.headerOptions,
+                version:state.version
+            })
+        });
+    };
+
+    componentDidMount() {
+        this.onMessageListener();
+        this.getData();
     }
     render() {
-        let url = this.state.headerOptions.url ? this.state.headerOptions.url.replace(/^https?\:\/\//i, "") : "nety :(("
-        let portalLogo = `${this.state.headerOptions.url}${this.state.headerOptions.logo}`;
+        let { logo , hostname , url , headerColor, buttonColor, buttonTextColor} = this.state.headerOptions;
+        let version = this.state.version;
     return (
         <div className="App">
                 <Row>
                     <Col>
-                        {this.state.headerOptions.logo ?
-                        <header className="App-header" style={{backgroundColor:this.state.headerOptions.headerColor}}>
-                            {this.state.headerOptions.logo
-                                ? <img height={36} src={portalLogo}/>
+                        {logo ?
+                        <header className="App-header" style={{backgroundColor:headerColor}}>
+                            {logo
+                                ? <img height={36} src={logo}/>
                                 : null
                             }
+                            <QRCodeModal tab={this.state.tabData}/>
                             <div>
-                                <h5 className="App-title">{url}</h5>
-                                <EnvButtons tabId={this.state.tabId}/>
+                                <h5 className="App-title">{hostname}</h5>
                             </div>
+                                <div>
+                                    <EnvButtons tab={this.state.tabData} buttonColor={buttonColor} buttonTextColor={buttonTextColor}/>
+                                </div>
                         </header>
                             : <div>No data</div>}
                     </Col>
@@ -78,10 +93,10 @@ class App extends Component {
             <Jumbotron fluid>
                 <Row>
                     <Col xs="8">
-                        <VersionBlock url={this.state.headerOptions.url} version={this.state.version}/>
+                        <VersionBlock url={url} version={version}/>
                     </Col>
                     <Col>
-                        <TestResult version={this.state.version} url={this.state.headerOptions.url}/>
+                        <TestResult version={version} url={url}/>
                     </Col>
                 </Row>
             </Jumbotron>

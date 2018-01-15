@@ -1,17 +1,28 @@
 let state = {
-    from:'ptqa-background',
-    isPortal: null,
+    tabData:{
+        url:'',
+        originUrl:'',
+        tabId:''
+    },
+    headerOptions:{
+        hostname:'',
+        url:'',
+        logo:'./assets/icon-logo-header.png',
+        headerColor:'rgb(36, 80, 149)'
+    },
     version:''
 };
-let headerData = [];
+
+let headerData = (localStorage.getItem('headerOptions'))
+                    ? JSON.parse(localStorage.getItem('headerOptions'))
+                    : [] ;
 let portalTab;
 let extensionTabId;
 let jiraResponse;
 
 
+
 chrome.browserAction.onClicked.addListener(function(tab) {
-    console.log('opened');
-    console.log(tab);
     checkTab(tab);
     chrome.tabs.create({
         url: chrome.extension.getURL('popup.html'),
@@ -32,7 +43,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 });
 
 chrome.tabs.onRemoved.addListener(function (tabId) {
-    (extensionTabId === tabId) ? chrome.browserAction.enable() : null;
+    (extensionTabId === tabId) && chrome.browserAction.enable();
     //enable app icon if app was closed
 });
 
@@ -48,46 +59,101 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     if (tab.selected && (changeInfo.url !== undefined)) {
         updatedURL = changeInfo.url;
     }
-    if (tab.url === updatedURL && tab.status === 'complete') {
+    if (tab.url === updatedURL && tab.status === 'complete' && updatedURL.indexOf(state.tabData.hostname) <= 0) {
         checkTab(tab);
     }
 });
+function sendState() {
+    chrome.runtime.sendMessage({data:state});
+}
 
 function checkTab(tab) {
-        if (tab.url.indexOf('chrome-extension://') > -1) {
+        if (tab.title == 'PT QA Helper') {
             extensionTabId = tab.id;
         } else if (tab.url.indexOf("http") > -1){
-            detectPortal(tab);
+            let originUrl = new URL(tab.url).origin;
+             let data = headerData.find(function(data) {
+                return data.url === originUrl
+             })
+             if (data) {
+             state.headerOptions = data;
+             state.tabData.tabId = tab.id;
+             state.tabData.url = tab.url;
+                 getVersionJson(originUrl);
+                 sendState();
+             } /*else {
+                 chrome.tabs.executeScript(tab.id, {file:`content.bundle.js`});
+                 chrome.tabs.sendMessage(tab.id,{getTabData:true},(response) => {
+                     console.warn(response)
+                     state.tabData = response.tabData;
+                     getVersionJson(originUrl);
+                     sendState();
+                 });
+             }*/
+/*            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                chrome.tabs.sendMessage(tabs[0].id,{getTabData:true},(response) => {
+                    console.log(response);
+                    chrome.tabs.executeScript(tabs[0].id, {file:`content.bundle.js`});
+                })
+            });*/
+
         }
 }
 
 chrome.runtime.onMessage.addListener(function (message, sender, response) {
     console.log('all messages log');
     console.log(message);
-
-    message.getHeaderData ? getHeaderData(portalTab) : null;
-    message.getVersion ? getVersionJson(portalTab) : null;
-
-    if (message.status === "loaded") {
-        console.log('received msg from client logo , bg , url etc...');
-
-        console.log(message);
-        headerData.push(message);
-        chrome.runtime.sendMessage({header:message, tabId:portalTab.id})
+    if (message.getData) {
+        response({data:state})
     }
 
+    if (message.contentData) {
+        getVersionJson(message.tabData.originUrl);
+        state.tabData.tabId = sender.tab.id;
+        state.tabData.url = sender.tab.url;
+        state.tabData.isPortal = message.tabData.isPortal;
+        state.tabData.hostname = message.tabData.hostname;
+        state.tabData.originUrl = message.tabData.originUrl;
+        state.headerOptions = message.headerData;
+        saveHeaderData(message.headerData);
+        sendState();
+    }
+
+    function saveHeaderData(headerOptions) {
+            let data = headerData.find(function(data) {
+                return data.url === headerOptions.url
+            });
+            if (!data) {
+                headerData.push(headerOptions);
+                localStorage.setItem('headerOptions',JSON.stringify(headerData))
+            }
+    }
+
+/*    function checkHeaderData(url,headerData) {
+        let data = headerData.find(function(data) {
+            return data.url === url
+        });
+        if (data) {
+            chrome.runtime.sendMessage({header:data})
+        } else {
+            headerData.push(message);
+            state.headerOptions = headerData;
+            //chrome.runtime.sendMessage({header:headerData})
+        }
+    }*/
+/*
     message.fastLoad
         ? chrome.tabs.update(portalTab.id,{url:portalTab.url + "?js_fast_load"})
         : null;
 
     message.showKeys
         ? chrome.tabs.update(portalTab.id,{url:portalTab.url + "?showTranslationKeys=1"})
-        : null;
+        : null;*/
 });
 
-function getVersionJson(tab) {
-    let url = new URL(tab.url);
-    let urlToFetch = url.origin + "/html/version.json?" + Date.now();
+function getVersionJson(originUrl) {
+
+    let urlToFetch = originUrl + "/html/version.json?" + Date.now();
 
     function handleErrors(response) {
         if (!response.ok) {
@@ -103,7 +169,7 @@ function getVersionJson(tab) {
         .then(response => {
             if (response.WPL_Version) {
                 state.version = response;
-                chrome.runtime.sendMessage({version:state.version})
+                chrome.runtime.sendMessage({version:response})
             }
         })
         .catch(error => {
@@ -114,15 +180,15 @@ function getVersionJson(tab) {
                 .then(response => {
                     if (response.WPL_Version) {
                         state.version = response;
-                        chrome.runtime.sendMessage({version:state.version})
+                        chrome.runtime.sendMessage({version:response})
                     }
                 })
                 .catch(console.log)
         });
 }
 
-function getPortalLogoAndBackground(tab) {
-    chrome.tabs.executeScript(tab.id, {code:` var callback = function(){
+/*function getPortalLogoAndBackground(tabId) {
+    chrome.tabs.executeScript(tabId, {code:` var callback = function(){
   // Handler when the DOM is fully loaded
      console.log('dom loaded');
      function getLogo() {
@@ -150,7 +216,7 @@ function getPortalLogoAndBackground(tab) {
       logo = getLogo()
       headerColor = getHeaderColor()
       if (headerColor || logo) {
-      chrome.runtime.sendMessage({ status:"loaded",url:window.location.origin,logo: logo,headerColor:headerColor });
+      chrome.runtime.sendMessage({ status:"loaded",url:window.location.origin,logo: window.location.origin+logo,headerColor:headerColor });
       }
 }
 if (
@@ -162,7 +228,7 @@ if (
   document.addEventListener("DOMContentLoaded", callback);
 }   
 `})
-}
+}*/
 
 
 function getSubTasks(result) {
@@ -198,7 +264,7 @@ function getSubTasks(result) {
     chrome.runtime.sendMessage({from:'Jira',subtasks:subtasks});
 }
 
-function detectPortal(tab) {
+/*function detectPortal(tab) {
     chrome.tabs.executeScript(tab.id, {code:`
     function checkIfPortal () {
         var scripts = document.querySelectorAll('head script');
@@ -220,16 +286,16 @@ function detectPortal(tab) {
             getVersionJson(tab);
         }
     });
-}
+}*/
 
 
-function getHeaderData(tab) {
-    let tabOriginUrl = new URL(tab.url).origin;
+function getHeaderData(originUrl,tabId) {
+    //let tabOriginUrl = new URL(tab.url).origin;
     let data = headerData.find(function (data) {
-        return data.url === tabOriginUrl
+        return data.url === originUrl
     });
-
-    data
-        ? chrome.runtime.sendMessage({header:data, tabId: tab.id})
-        : getPortalLogoAndBackground(tab)
+    if (data) {
+        state.headerOptions = data;
+        chrome.runtime.sendMessage({header:data})
+    }
 }

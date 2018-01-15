@@ -1,6 +1,7 @@
-import React, { Component } from 'react';
+import React  from 'react';
 import DevStampModal from './DevStampModal'
 import {Container} from 'reactstrap'
+
 const DevStamp = () =>
         <Container>
             <h5>
