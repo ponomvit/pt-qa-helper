@@ -15,6 +15,11 @@ module.exports = {
         },
     },
     // Entry files for our popup and background pages
+    node: {
+        fs: 'empty',
+        net: 'empty',
+        tls: 'empty'
+    },
     entry: {
         popup: './src/popup.js',
         content: './src/content.js',
@@ -43,6 +48,11 @@ module.exports = {
                     use: 'css-loader'
                 })
             },
+            {
+                test: /\.json$/,
+                loader: 'json-loader'
+            },
+
             {
                 test: /\.(ico|eot|otf|webp|ttf|woff|woff2)(\?.*)?$/,
                 use: 'file-loader?limit=100000'

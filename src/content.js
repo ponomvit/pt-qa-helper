@@ -61,7 +61,7 @@ let observer = new MutationObserver(function (mutations, me) {
             me.disconnect();
             let logo = getLogo();
             let headerColor = getHeaderColor();
-            let buttonStyles = getButtonColor();
+            //let buttonStyles = getButtonColor();
 
             chrome.runtime.sendMessage({
                 contentData:true,

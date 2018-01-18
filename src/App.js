@@ -9,8 +9,8 @@ import VersionBlock from './Components/VersionBlock'
 import DevStamp from './Components/DevStamp'
 import { Jumbotron, Container, Row, Col } from 'reactstrap';
 
+import Jenkins from './Components/Jenkins'
 class App extends Component {
-
     state = {
         tabData:{},
         headerOptions:{
@@ -66,6 +66,7 @@ class App extends Component {
         this.onMessageListener();
         this.getData();
     }
+
     render() {
         let { logo , hostname , url , headerColor, buttonColor, buttonTextColor} = this.state.headerOptions;
         let version = this.state.version;
@@ -111,7 +112,7 @@ class App extends Component {
                 </Row>
                 <Row>
                     <Col>
-
+                        <Jenkins/>
                     </Col>
                 </Row>
         </div>
