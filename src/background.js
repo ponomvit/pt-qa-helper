@@ -9,18 +9,14 @@ let state = {
         url:'',
         logo:'./assets/icon-logo-header.png',
         headerColor:'rgb(36, 80, 149)'
-    },
-    version:''
+    }
 };
 
-let headerData = (localStorage.getItem('headerOptions'))
+let headerData =    localStorage.getItem('headerOptions')
                     ? JSON.parse(localStorage.getItem('headerOptions'))
                     : [] ;
-let portalTab;
+
 let extensionTabId;
-let jiraResponse;
-
-
 
 chrome.browserAction.onClicked.addListener(function(tab) {
     checkTab(tab);
@@ -64,7 +60,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     }
 });
 function sendState() {
-    chrome.runtime.sendMessage({data:state});
+    chrome.runtime.sendMessage({headerOptions:state.headerOptions, tabData:state.tabData});
 }
 
 function checkTab(tab) {
@@ -79,24 +75,10 @@ function checkTab(tab) {
              state.headerOptions = data;
              state.tabData.tabId = tab.id;
              state.tabData.url = tab.url;
-                 getVersionJson(originUrl);
+             state.tabData.originUrl = originUrl;
+             state.tabData.hostname = originUrl; //TODO
                  sendState();
-             } /*else {
-                 chrome.tabs.executeScript(tab.id, {file:`content.bundle.js`});
-                 chrome.tabs.sendMessage(tab.id,{getTabData:true},(response) => {
-                     console.warn(response)
-                     state.tabData = response.tabData;
-                     getVersionJson(originUrl);
-                     sendState();
-                 });
-             }*/
-/*            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-                chrome.tabs.sendMessage(tabs[0].id,{getTabData:true},(response) => {
-                    console.log(response);
-                    chrome.tabs.executeScript(tabs[0].id, {file:`content.bundle.js`});
-                })
-            });*/
-
+             }
         }
 }
 
@@ -104,18 +86,18 @@ chrome.runtime.onMessage.addListener(function (message, sender, response) {
     console.log('all messages log');
     console.log(message);
     if (message.getData) {
-        response({data:state})
+        response({headerOptions:state.headerOptions, tabData:state.tabData})
     }
 
     if (message.contentData) {
-        getVersionJson(message.tabData.originUrl);
+        //getVersionJson(message.tabData.originUrl);
         state.tabData.tabId = sender.tab.id;
         state.tabData.url = sender.tab.url;
         state.tabData.isPortal = message.tabData.isPortal;
         state.tabData.hostname = message.tabData.hostname;
         state.tabData.originUrl = message.tabData.originUrl;
-        state.headerOptions = message.headerData;
-        saveHeaderData(message.headerData);
+        //state.headerOptions = message.headerData; TODO
+        saveHeaderData(message.headerOptions);
         sendState();
     }
 
@@ -125,110 +107,11 @@ chrome.runtime.onMessage.addListener(function (message, sender, response) {
             });
             if (!data) {
                 headerData.push(headerOptions);
+                state.headerOptions = headerOptions;
                 localStorage.setItem('headerOptions',JSON.stringify(headerData))
             }
     }
-
-/*    function checkHeaderData(url,headerData) {
-        let data = headerData.find(function(data) {
-            return data.url === url
-        });
-        if (data) {
-            chrome.runtime.sendMessage({header:data})
-        } else {
-            headerData.push(message);
-            state.headerOptions = headerData;
-            //chrome.runtime.sendMessage({header:headerData})
-        }
-    }*/
-/*
-    message.fastLoad
-        ? chrome.tabs.update(portalTab.id,{url:portalTab.url + "?js_fast_load"})
-        : null;
-
-    message.showKeys
-        ? chrome.tabs.update(portalTab.id,{url:portalTab.url + "?showTranslationKeys=1"})
-        : null;*/
 });
-
-function getVersionJson(originUrl) {
-
-    let urlToFetch = originUrl + "/html/version.json?" + Date.now();
-
-    function handleErrors(response) {
-        if (!response.ok) {
-            chrome.runtime.sendMessage({version:'error'});
-            throw Error(response.status + " " + response.statusText);
-        }
-        return response;
-    }
-
-    fetch(urlToFetch)
-        .then(handleErrors)
-        .then(response => response.json())
-        .then(response => {
-            if (response.WPL_Version) {
-                state.version = response;
-                chrome.runtime.sendMessage({version:response})
-            }
-        })
-        .catch(error => {
-            console.log(error);
-            fetch(urlToFetch.replace("/html/","/"))
-                .then(handleErrors)
-                .then(data => data.json())
-                .then(response => {
-                    if (response.WPL_Version) {
-                        state.version = response;
-                        chrome.runtime.sendMessage({version:response})
-                    }
-                })
-                .catch(console.log)
-        });
-}
-
-/*function getPortalLogoAndBackground(tabId) {
-    chrome.tabs.executeScript(tabId, {code:` var callback = function(){
-  // Handler when the DOM is fully loaded
-     console.log('dom loaded');
-     function getLogo() {
-        let logoElem = document.querySelector('.main-header__logo') || document.querySelector('.main-logo__img')
-        if (logoElem && logoElem.getAttribute('src')) {
-        return logoElem.getAttribute('src');
-        } else if (logoElem) {
-        return logoElem.style.backgroundImage.slice(4, -1).replace(/"/g, "");;
-        } 
-        else {
-        console.log(logoElem)
-        return null
-        }  
-        } 
-     
-     function getHeaderColor () { 
-    let mainHeader = document.querySelector('.navigation-container');
-
-    if (mainHeader) {
-    return window.getComputedStyle(mainHeader, null).getPropertyValue("background-color")
-    } else {
-     return null
-    }
-}
-      logo = getLogo()
-      headerColor = getHeaderColor()
-      if (headerColor || logo) {
-      chrome.runtime.sendMessage({ status:"loaded",url:window.location.origin,logo: window.location.origin+logo,headerColor:headerColor });
-      }
-}
-if (
-    document.readyState === "complete" ||
-    (document.readyState !== "loading" && !document.documentElement.doScroll)
-) {
-  callback();
-} else {
-  document.addEventListener("DOMContentLoaded", callback);
-}   
-`})
-}*/
 
 
 function getSubTasks(result) {
@@ -264,38 +147,3 @@ function getSubTasks(result) {
     chrome.runtime.sendMessage({from:'Jira',subtasks:subtasks});
 }
 
-/*function detectPortal(tab) {
-    chrome.tabs.executeScript(tab.id, {code:`
-    function checkIfPortal () {
-        var scripts = document.querySelectorAll('head script');
-        var isPortal = false;
-        for (script of scripts) {
-            if (script.innerHTML.indexOf('Playtech') > -1) {
-                isPortal = true;
-                break;
-            }
-        }
-        return isPortal;
-    }
-    checkIfPortal();                                        
-`},function (isPortal) {
-        if (isPortal && isPortal[0]) {
-            chrome.runtime.sendMessage({tabId:tab.id});
-            portalTab = tab;
-            getHeaderData(tab);
-            getVersionJson(tab);
-        }
-    });
-}*/
-
-
-function getHeaderData(originUrl,tabId) {
-    //let tabOriginUrl = new URL(tab.url).origin;
-    let data = headerData.find(function (data) {
-        return data.url === originUrl
-    });
-    if (data) {
-        state.headerOptions = data;
-        chrome.runtime.sendMessage({header:data})
-    }
-}

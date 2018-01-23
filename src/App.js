@@ -10,56 +10,70 @@ import DevStamp from './Components/DevStamp'
 import { Jumbotron, Container, Row, Col } from 'reactstrap';
 
 import Jenkins from './Components/Jenkins'
+
 class App extends Component {
+
     state = {
-        tabData:{},
-        headerOptions:{
-            headerColor:"rgb(36, 80, 149)",
-            logo : './assets/icon-logo-header.png',
-            status : "",
-            url : ""
-        },
-        version:""
-    };
+        headerOptions:'',
+        version:''
+    }
 
     onMessageListener = () => {
         chrome.runtime.onMessage.addListener((message, sender, response) => {
-            console.log(message);
-/*            message.tabData ? this.setState({
-                tabData:message.tabData
-                }) : null;
-            if (message.header) {
+            console.log(message)
+            if (message.contentData || message.headerOptions) {
+                const {tabData, headerOptions} = message;
                 this.setState({
-                    headerOptions:message.header
+                    headerOptions
                 })
-            }*/
-            if (message.data && message.data) {
-                this.setState({
-                    tabData:message.data.tabData,
-                    headerOptions:message.data.headerOptions,
-                    version:message.data.version
-                })
+                this.fetchVersionJson(tabData.originUrl)
             }
-
-            message.version && message.version !== this.state.version
-                ? this.setState({
-                    version:message.version
-                })
-                : null;
-        });
-    };
-
+        })
+    }
 
     getData = () => {
         chrome.runtime.sendMessage({getData: true},(response)=> {
             //console.log(response.data)
-            let state = response.data;
+            console.log(response)
+            let {tabData,headerOptions} = response;
             this.setState({
-                tabData:state.tabData,
-                headerOptions:state.headerOptions,
-                version:state.version
+                tabData,
+                headerOptions
             })
+            this.fetchVersionJson(tabData.originUrl)
         });
+    };
+
+    fetchVersionJson = (url) => {
+            let urlToFetch = url + "/html/version.json?" + Date.now();
+            function handleErrors(response) {
+                if (!response.ok) {
+                    this.setState({version:'error'});
+                    throw Error(response.status + " " + response.statusText);
+                }
+                return response;
+            }
+
+            fetch(urlToFetch)
+                .then(handleErrors)
+                .then(response => response.json())
+                .then(response => {
+                    if ('WPL_Version' in response) {
+                        this.setState({version:response});
+                    }
+                })
+                .catch(error => {
+                    console.log(error);
+                    fetch(urlToFetch.replace("/html/","/"))
+                        .then(handleErrors)
+                        .then(data => data.json())
+                        .then(response => {
+                            if ('WPL_Version' in response) {
+                                this.setState({version:response});
+                            }
+                        })
+                        .catch(console.log)
+                });
     };
 
     componentDidMount() {
@@ -67,8 +81,10 @@ class App extends Component {
         this.getData();
     }
 
+
+
     render() {
-        let { logo , hostname , url , headerColor, buttonColor, buttonTextColor} = this.state.headerOptions;
+        let { logo , hostname , url , headerColor} = this.state.headerOptions;
         let version = this.state.version;
     return (
         <div className="App">
@@ -85,7 +101,7 @@ class App extends Component {
                                 <h5 className="App-title">{hostname}</h5>
                             </div>
                                 <div>
-                                    <EnvButtons tab={this.state.tabData} buttonColor={buttonColor} buttonTextColor={buttonTextColor}/>
+                                    <EnvButtons tab={this.state.tabData}/>
                                 </div>
                         </header>
                             : <div>No data</div>}

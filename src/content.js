@@ -70,7 +70,7 @@ let observer = new MutationObserver(function (mutations, me) {
                     originUrl:window.location.origin,
                     hostname:window.location.hostname
                 },
-                headerData:{
+                headerOptions:{
                     url:window.location.origin,
                     hostname:window.location.hostname,
                     logo: window.location.origin+logo,
