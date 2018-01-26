@@ -15,20 +15,11 @@ let gitData = {
 };
 
 
-/*jenkins.all_jobs(function(err, data) {
+jenkins.all_jobs(function(err, data) {
     if (err){ return console.log(err); }
     console.log(data)
-});*/
+});
 
-
-/*jenkins.build_info('Build-Core-RPM', '2750', function(err, data) {
-    if (err){ return console.log(err); }
-    console.log(data)
-});*/
-/*jenkins.build_info('Build-Core-RPM', 2754, (err, data) => {
-    if (err){ return console.log(err); }
-    console.log(data)
-});*/
 
 class Jenkins extends React.Component {
     state = {

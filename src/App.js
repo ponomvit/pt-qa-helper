@@ -47,7 +47,7 @@ class App extends Component {
 
     fetchVersionJson = (url) => {
             let urlToFetch = url + "/html/version.json?" + Date.now();
-            function handleErrors(response) {
+            let handleErrors = (response) => {
                 if (!response.ok) {
                     this.setState({version:'error'});
                     throw Error(response.status + " " + response.statusText);

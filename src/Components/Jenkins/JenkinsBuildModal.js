@@ -53,7 +53,7 @@ class JenkinsBuildModal extends React.Component {
             NODE_VERSION:nodeVersion
         }
 
-        this.props.buildWIthParams(jobName,coreParams);
+        this.props.buildWIthParams('Build-RPM-PlaytechB2C',coreParams);
         this.toggle();
     }
 
