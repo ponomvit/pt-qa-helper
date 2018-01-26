@@ -9,7 +9,7 @@ import VersionBlock from './Components/VersionBlock'
 import DevStamp from './Components/DevStamp'
 import { Jumbotron, Container, Row, Col } from 'reactstrap';
 
-import Jenkins from './Components/Jenkins'
+import Jenkins from './Components/Jenkins/Jenkins'
 
 class App extends Component {
 
@@ -21,10 +21,11 @@ class App extends Component {
     onMessageListener = () => {
         chrome.runtime.onMessage.addListener((message, sender, response) => {
             console.log(message)
-            if (message.contentData || message.headerOptions) {
+            if (message.tabData || message.headerOptions) {
                 const {tabData, headerOptions} = message;
                 this.setState({
-                    headerOptions
+                    headerOptions,
+                    tabData
                 })
                 this.fetchVersionJson(tabData.originUrl)
             }
@@ -126,11 +127,8 @@ class App extends Component {
                         <CreditCardGenerator/>
                     </Col>
                 </Row>
-                <Row>
-                    <Col>
-                        <Jenkins/>
-                    </Col>
-                </Row>
+            <hr className="my-2" />
+            <Jenkins/>
         </div>
     );
     }
