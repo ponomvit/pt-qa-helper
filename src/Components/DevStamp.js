@@ -2,12 +2,12 @@ import React  from 'react';
 import DevStampModal from './DevStampModal'
 import {Container} from 'reactstrap'
 
-const DevStamp = () =>
+const DevStamp = ({handleAlert}) =>
         <Container>
             <h5>
                 Fix stamp
             </h5>
-            <DevStampModal/>
+            <DevStampModal handleAlert={handleAlert}/>
         </Container>
 ;
 

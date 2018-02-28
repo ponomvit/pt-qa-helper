@@ -29,7 +29,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
             type: 'popup',
             focused: true,
             width: 550,
-            height: 750,
+            height: 730,
             top: 80,
             left: 1500
         });
@@ -64,7 +64,7 @@ function sendState() {
 }
 
 function checkTab(tab) {
-        if (tab.title == 'PT QA Helper') {
+        if (tab.title === 'PT QA Helper') {
             extensionTabId = tab.id;
         } else if (tab.url.indexOf("http") > -1){
             let originUrl = new URL(tab.url).origin;
@@ -112,38 +112,3 @@ chrome.runtime.onMessage.addListener(function (message, sender, response) {
             }
     }
 });
-
-
-function getSubTasks(result) {
-    var subtasksNames = result.querySelectorAll('#issuetable tr td.stsummary a');
-    var issueTypes = result.querySelectorAll('#issuetable tr td.issuetype img');
-    var progress = result.querySelectorAll('#issuetable tr td.progress');
-    var estimate = [];
-    var subtasks = [];
-
-    for (var i=0; i<subtasksNames.length; i++) {
-
-        if (progress[i] && progress[i].innerHTML.trim() !== "&nbsp;") {
-            if(progress[i].querySelector('table.tt_graph td img').getAttribute('alt').indexOf('Original') >= 0) {
-                var estimateArr = (progress[i].querySelector('table.tt_graph td img').getAttribute('alt').substring(20).split(' '));
-                var convertedEstimate;
-                if (!isNaN(estimateArr[0])) {
-                    convertedEstimate = estimateArr[0] + estimateArr[1][0]
-                } else convertedEstimate = "";
-                if (estimateArr[2]) {
-                    convertedEstimate = convertedEstimate + " " + estimateArr[2] + estimateArr[3][0]
-                }
-                if (estimateArr[4]) {
-                    convertedEstimate = convertedEstimate + " " + estimateArr[4] + estimateArr[5][0]
-                }
-                estimate.push(convertedEstimate)
-            }
-
-        } else {
-            estimate.push("")
-        }
-        subtasks.push({name:subtasksNames[i].text,type:issueTypes[i].getAttribute('alt'),estimate:estimate[i]});
-    }
-    chrome.runtime.sendMessage({from:'Jira',subtasks:subtasks});
-}
-

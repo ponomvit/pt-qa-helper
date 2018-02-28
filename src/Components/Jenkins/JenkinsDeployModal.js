@@ -1,8 +1,13 @@
 import React from 'react';
 import RefreshIcon from 'react-icons/lib/md/refresh'
 import Select from 'react-select';
+import 'react-select/dist/react-select.css';
 import { Col, Container, Table, Button, Label , Input, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import Toast from '../Toast'
+const jenkinsapi = require('jenkins-api')
+const jenkins = jenkinsapi.init('http://ua-portal-automation-1.ukraine.ptec/jenkins');
+import PROJECTS from './data/projects'
+
 
 
 class JenkinsDeployModal extends React.Component {
@@ -10,46 +15,19 @@ class JenkinsDeployModal extends React.Component {
         visible: false,
         selectedDeployOption:'',
         selectedRpmOption:'',
-        building:false
+        building:false,
+        detailedBuilds:[],
+        rpmOptions:[]
     };
 
-    deployOptions = [
-        { value:'wpl-alpha-admin.ukraine.ptec',   label:'Alpha', env:'wpldev1-alpha2'},
-        { value:'wpl-admin-beta-src.ukraine.ptec',   label:'Beta', env:'wpldev1-beta'},
-        { value:'wpl-delta-admin.ukraine.ptec',   label:'Delta', env:'wpldev1-delta'},
-        { value:'wpl-core3-wpl-pub-por-01.ukraine.ptec',   label:'Core-QA1', env:'wpl-core3'},
-        { value:'wpl-core3-wpl-pub-por-02.ukraine.ptec',   label:'Core-QA2', env:'wpl-core3'},
-        { value:'wpl-core3-wpl-pub-por-03.ukraine.ptec',   label:'Core-QA3', env:'wpl-core3'},
-        { value:'wpl-core3-wpl-pub-por-04.ukraine.ptec',   label:'Core-QA4', env:'wpl-core3'},
-        { value:'wpl-core3-wpl-pub-por-05.ukraine.ptec',   label:'Core-QA5', env:'wpl-core3'},
-        { value:'wpl-core3-wpl-pub-por-06.ukraine.ptec',   label:'Core-QA6', env:'wpl-core3'},
-        { value:'wpl-core3-wpl-pub-por-07.ukraine.ptec',   label:'Core-QA7', env:'wpl-core3'},
-        { value:'wpl-core3-wpl-pub-por-08.ukraine.ptec',   label:'Core-QA8', env:'wpl-core3'},
-        { value:'wpl-core3-wpl-pub-por-09.ukraine.ptec',   label:'Core-QA9', env:'wpl-core3'},
-        { value:'wpl-core3-wpl-pub-por-10.ukraine.ptec',   label:'Core-QA10', env:'wpl-core3'},
-        { value:'wpl-core3-wpl-pub-por-11.ukraine.ptec',   label:'Core-QA11', env:'wpl-core3'},
-        { value:'wpl-hub2-01.EE.playtech.corp',   label:'Core-1', env:'wpl-core3'},
-        { value:'wpl-hub2-02.EE.playtech.corp',   label:'Core-2', env:'wpl-core3'},
-        { value:'wpl-hub2-03.EE.playtech.corp',   label:'Core-3', env:'wpl-core3'},
-        { value:'wpl-hub2-04.EE.playtech.corp',   label:'Core-4', env:'wpl-core3'},
-        { value:'wpl-hub2-05.EE.playtech.corp',   label:'Core-5', env:'wpl-core3'},
-        { value:'wpl-hub2-06.EE.playtech.corp',   label:'Core-6', env:'wpl-core3'},
-        { value:'wpl-hub2-07.EE.playtech.corp',   label:'Core-7', env:'wpl-core3'},
-        { value:'wpl-hub2-08.EE.playtech.corp',   label:'Core-8', env:'wpl-core3'},
-        { value:'wpl-hub2-09.EE.playtech.corp',   label:'Core-9', env:'wpl-core3'},
-        { value:'wpl-hub2-10.EE.playtech.corp',   label:'Core-10', env:'wpl-core3'}
-    ]
-
-
     toggle = () => {
-        this.props.getLastBuild('Deploy-Core-RPM');
         this.setState({
             modal: !this.state.modal
         })
     }
 
     handleDeploy = () => {
-        let jobName = 'Deploy-Core-RPM';
+        let jobName = PROJECTS.projects[0].deployJob;
         let {env,value} = this.state.selectedDeployOption;
         let rpm = this.state.selectedRpmOption.value;
         let deployParams = {
@@ -62,31 +40,29 @@ class JenkinsDeployModal extends React.Component {
             CDN_PURGE_CPCODE:'',
             RECEPIENTS:''
         }
-        this.props.deployWithParams(jobName,deployParams)
+        this.buildWIthParams(jobName,deployParams)
         this.toggle()
     }
 
     render() {
         let {selectedRpmOption, selectedDeployOption} = this.state;
 
-        const {id, building, result, from, description, started} = this.props.lastBuild;
-        let buildFrom = from && from.replace('refs/heads/','')
-        let buildInprogressToast = building
+/*        let buildInprogressToast = building
             ? <Toast color="warning">{`Deploy ${id} with Package ${buildFrom} ${started} is in progress..`}</Toast>
-            : <Toast color={result === 'SUCCESS' ? 'success' : 'warning'}>{`Deploy ${id} from ${buildFrom} ${started} ${result}`}</Toast>
+            : <Toast color={result === 'SUCCESS' ? 'success' : 'warning'}>{`Deploy ${id} from ${buildFrom} ${started} ${result}`}</Toast>*/
         return (
-            <Container>
+            <div>
                 <Button color='info' onClick={this.toggle}>Deploy</Button>
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
                     <ModalHeader toggle={this.toggle}>Deploy Core RPM</ModalHeader>
                     <ModalBody>
-                        {buildInprogressToast}
+                        {/*{buildInprogressToast}*/}
                         <Label>RPM</Label>
                         <Select
                             name="rpm-to-deploy"
                             value={selectedRpmOption}
                             onChange={this.handleRpmChange}
-                            options={this.props.rpms}
+                            options={this.state.rpmOptions}
                             clearable={false}
                         />
                         <Label>Environment</Label>
@@ -94,7 +70,7 @@ class JenkinsDeployModal extends React.Component {
                             name="target-environment"
                             value={selectedDeployOption}
                             onChange={this.handleDeployChange}
-                            options={this.deployOptions}
+                            options={PROJECTS.projects[0].deployOptions}
                             clearable={false}
                         />
                     </ModalBody>
@@ -103,10 +79,12 @@ class JenkinsDeployModal extends React.Component {
                         <Button color="secondary" onClick={this.toggle}>Cancel</Button>
                     </ModalFooter>
                 </Modal>
-            </Container>
+            </div>
         );
     }
-
+    componentDidMount () {
+        this.getAllSuccessBuilds();
+    }
     handleDeployChange = (selectedOption) => {
         this.setState({ selectedDeployOption:selectedOption },() => console.log(this.state.selectedDeployOption));
         console.log(`Selected deploy option: `,selectedOption);
@@ -116,6 +94,42 @@ class JenkinsDeployModal extends React.Component {
         console.log(`Selected rpm option: `,selectedOption);
     }
 
+    buildWIthParams = (job,params) => {
+        jenkins.build_with_params(
+            job,
+            params,
+            (err,data) => {
+                err && console.log(err)
+                console.log(data)
+            }
+        );
+    };
+    getAllSuccessBuilds = (jobName='Build-Core-RPM') => {
+        jenkins.all_builds(jobName, (err, data) => {
+            if (err){ return console.log(err); }
+            data.map(build => {
+                if (build.result === 'SUCCESS') {
+                    this.getDetailedBuildInfo(build.id)
+                }
+            })
+
+        })
+    }
+    getDetailedBuildInfo = (buildId,jobName='Build-Core-RPM') => {
+
+        jenkins.build_info(jobName, buildId, (err, data) => {
+            err && console.log(err)
+            if (this.state.detailedBuilds && this.state.detailedBuilds.some((build)=> data.id === build.id)) return;
+            let rpm = {
+                value : data.description && data.description.split('RPM: ').pop(),
+                label: data.description && `ID: ${data.id} ` + data.description.split('<br />')[0].replace('refs/heads/','')
+            };
+            this.setState({
+                detailedBuilds: [...this.state.detailedBuilds, data],
+                rpmOptions: [...this.state.rpmOptions, rpm]
+            })
+        });
+    }
 }
 
 export default JenkinsDeployModal;

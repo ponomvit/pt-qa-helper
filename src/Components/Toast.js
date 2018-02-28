@@ -14,7 +14,7 @@ class Toast extends React.Component {
 
     render() {
         return (
-            <div>
+            <div style = {{position:'absolute', bottom: 0}}>
             <Alert color={this.props.color} isOpen={this.state.visible}>
                 {this.props.children}
             </Alert>

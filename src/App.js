@@ -7,16 +7,19 @@ import EnvButtons from './Components/EnvButtons'
 import TestResult from './Components/TestResult'
 import VersionBlock from './Components/VersionBlock'
 import DevStamp from './Components/DevStamp'
-import { Jumbotron, Container, Row, Col } from 'reactstrap';
-
-import Jenkins from './Components/Jenkins/Jenkins'
+import { Alert, Jumbotron, Row, Col } from 'reactstrap';
+/*import JenkinsBuildModal from './Components/Jenkins/JenkinsBuildModal'
+import JenkinsDeployModal from './Components/Jenkins/JenkinsDeployModal'*/
 
 class App extends Component {
 
     state = {
+        isAlertVisible:false,
+        alertText:'Alert',
+        alertColor:'success',
         headerOptions:'',
-        version:''
-    }
+        version:'',
+    };
 
     onMessageListener = () => {
         chrome.runtime.onMessage.addListener((message, sender, response) => {
@@ -26,11 +29,11 @@ class App extends Component {
                 this.setState({
                     headerOptions,
                     tabData
-                })
+                });
                 this.fetchVersionJson(tabData.originUrl)
             }
         })
-    }
+    };
 
     getData = () => {
         chrome.runtime.sendMessage({getData: true},(response)=> {
@@ -40,7 +43,7 @@ class App extends Component {
             this.setState({
                 tabData,
                 headerOptions
-            })
+            });
             this.fetchVersionJson(tabData.originUrl)
         });
     };
@@ -77,16 +80,31 @@ class App extends Component {
                 });
     };
 
+    handleAlert = (alertText='Alert',alertColor,t=2000) => {
+        this.setState({
+            isAlertVisible:true,
+            alertColor:alertColor,
+            alertText:alertText
+        })
+        this.removeToast(t)
+    }
+
+    removeToast = (t=2000) => {
+        setTimeout(() => this.setState({
+            isAlertVisible:false
+        }),t)
+    };
+
     componentDidMount() {
         this.onMessageListener();
         this.getData();
     }
 
-
-
     render() {
         let { logo , hostname , url , headerColor} = this.state.headerOptions;
         let version = this.state.version;
+        let {isAlertVisible, alertText, alertColor} = this.state;
+        let alert = isAlertVisible && <Alert color = {alertColor} style={{marginTop:'20px',textAlign: 'center', zIndex:'9000'}}>{alertText}</Alert>;
     return (
         <div className="App">
                 <Row>
@@ -108,27 +126,34 @@ class App extends Component {
                             : <div>No data</div>}
                     </Col>
                 </Row>
-            <Jumbotron fluid>
+            <Jumbotron style={{marginBottom:0}} fluid>
                 <Row>
                     <Col xs="8">
                         <VersionBlock url={url} version={version}/>
                     </Col>
                     <Col>
-                        <TestResult version={version} url={url}/>
+                        {version && version !== 'error' && <TestResult version={version} url={url} handleAlert={this.handleAlert}/>}
+{/*                        <h5>Jenkins</h5>
+                        <JenkinsBuildModal />
+                        <JenkinsDeployModal />*/}
                     </Col>
                 </Row>
             </Jumbotron>
-            <hr className="my-2" />
+
+            <br />
                 <Row>
                     <Col xs="4">
-                        <DevStamp/>
+                        <DevStamp handleAlert={this.handleAlert}/>
                     </Col>
                     <Col>
-                        <CreditCardGenerator/>
+                        <CreditCardGenerator handleAlert={this.handleAlert}/>
                     </Col>
                 </Row>
-            <hr className="my-2" />
-            <Jenkins/>
+            <Row>
+                <Col>
+                    {alert}
+                </Col>
+            </Row>
         </div>
     );
     }

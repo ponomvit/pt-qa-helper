@@ -1,63 +1,38 @@
 /* eslint react/no-multi-comp: 0, react/prop-types: 0 */
 
 import React from 'react';
-import Toast from './Toast'
-import { Form, FormGroup, Label, Input, FormText, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Form, FormGroup, Label, Input, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import copy from 'copy-to-clipboard';
 
 class DevStampModal extends React.Component {
 
     state = {
         modal: false,
-        isAlertVisible: false,
-        alertColor:'dark',
-        alertMessage:''
     };
 
-    removeToast = (t=2000) => {
-        setTimeout(() => this.setState({
-            isAlertVisible:false
-        }),t)
-    };
     toggle = () => {
         this.setState({
             modal: !this.state.modal,
-            isAlertVisible: false
         });
     };
     clearForm = () => {
         document.querySelector('.dev-form').reset();
-        this.setState({
-            alertMessage:'Form is cleared',
-            isAlertVisible:true
-        });
-        this.removeToast()
+        this.props.handleAlert('Form is cleared','dark');
     }
 
     copyToClipboard = () => {
         let form = document.querySelector('.dev-form');
         let [whatWasDoneValue,affectedAreasValue,levelOfImplementationValue,gitUrlValue,commentValue] = Array.from(form.elements).map((field)=> field.value);
 
-        let whatWasDoneRow = whatWasDoneValue ? `| *What was done: * | ${whatWasDoneValue} |` : '';
-        let affectedAreasRow = affectedAreasValue ? `| *Affected areas: * | ${affectedAreasValue} |` : '';
-        let levelOfImplementationRow =  levelOfImplementationValue ? `| *Level of implementation: * | ${levelOfImplementationValue} |` : '';
-        let gitCommitUrlRow = gitUrlValue ? `| *GitLab commit URL: * | [Commit|${gitUrlValue}] |` : '';
-        let commentRow = commentValue ? `| *Comment: * | ${commentValue} |` : '';
+        let whatWasDoneRow = whatWasDoneValue ? `| *What was done:* | ${whatWasDoneValue} | \n` : '';
+        let affectedAreasRow = affectedAreasValue ? `| *Affected areas:* | ${affectedAreasValue} | \n` : '';
+        let levelOfImplementationRow =  levelOfImplementationValue ? `| *Level of implementation:* | ${levelOfImplementationValue} | \n` : '';
+        let gitCommitUrlRow = gitUrlValue ? `| *GitLab commit URL:* | [Commit|${gitUrlValue}] | \n` : '';
+        let commentRow = commentValue ? `| *Comment:* | ${commentValue} | \n` : '';
 
-        let devComment =
-                        `{panel:title=Fix stamp|borderColor=#828282|titleBGColor=#86BBD6|bgColor=#D7E8F0}
-                        ${whatWasDoneRow}
-                        ${affectedAreasRow}
-                        ${levelOfImplementationRow}
-                        ${gitCommitUrlRow}
-                        ${commentRow}
-                        {panel}`;
+        let devComment = `{panel:title=Fix stamp|borderColor=#828282|titleBGColor=#86BBD6|bgColor=#D7E8F0} \n${whatWasDoneRow}${affectedAreasRow}${levelOfImplementationRow}${gitCommitUrlRow}${commentRow}{panel}`;
         copy(devComment);
-        this.setState({
-            isAlertVisible:true,
-            alertMessage:'Copied.'
-        });
-        this.removeToast()
+        this.props.handleAlert('Copied','dark');
     };
 
     render() {
@@ -95,7 +70,6 @@ class DevStampModal extends React.Component {
                         </Form>
                     </ModalBody>
                     <ModalFooter>
-                        <Toast visible={this.state.isAlertVisible} color={this.state.alertColor}>{this.state.alertMessage}</Toast>
                         <Button color="info" onClick={this.clearForm}>Clear</Button>{' '}
                         <Button color="info" type="submit" onClick={this.copyToClipboard}>Copy</Button>{' '}
                         <Button color="secondary" onClick={this.toggle}>Back</Button>

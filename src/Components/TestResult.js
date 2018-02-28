@@ -1,23 +1,11 @@
 import React, { Component } from 'react';
-import Toast from './Toast'
-import {Container, ButtonGroup, Button} from 'reactstrap';
+import {ButtonGroup, Button} from 'reactstrap';
 import copy from 'copy-to-clipboard';
 const platform = require('platform');
 
 
 
-class TestResult extends React.Component {
-    state = {
-        isAlertVisible: false,
-        alertMessage: null,
-        alertColor: null
-    };
-
-    removeToast = (t=2000) => {
-            setTimeout(() => this.setState({
-                isAlertVisible:false
-            }),t)
-    };
+class TestResult extends Component {
     copyPassedResult = () => {
     let passComment = `{panel:title=PT QA Test Results|borderColor=#828282|titleBGColor=#7EC45C|bgColor=#E1FADE}
                             | *Test Status:* | (/) Test is OK |
@@ -33,12 +21,7 @@ class TestResult extends React.Component {
                             | *Last Commit hash:* | ${this.props.version.WPL_Git_Log[1].split(' |')[1].trim()} | 
                             {panel}`;
     copy(passComment);
-        this.setState({
-            isAlertVisible:true,
-            alertMessage: 'Copied.',
-            alertColor: 'success'
-        });
-        this.removeToast()
+        this.props.handleAlert('Passed result is copied.','success')
 };
     copyFailedResult = () => {
     let failComment = `{panel:title=PT QA Test Results|borderColor=#828282|titleBGColor=#ff7f7f|bgColor=#FFF4F0}
@@ -55,12 +38,7 @@ class TestResult extends React.Component {
                              | *Last Commit hash:* | ${this.props.version.WPL_Git_Log[1].split(' |')[1].trim()} | 
                              {panel}`;
     copy(failComment);
-        this.setState({
-            isAlertVisible:true,
-            alertMessage: 'Copied.',
-            alertColor: 'danger'
-        });
-        this.removeToast();
+        this.props.handleAlert('Failed result is copied.','danger')
 }
 
     render() {
@@ -73,7 +51,6 @@ class TestResult extends React.Component {
                     <Button color="success" onClick={this.copyPassedResult}>Passed</Button>
                     <Button color="danger" onClick={this.copyFailedResult}>Failed</Button>
                 </ButtonGroup>
-                <Toast visible={this.state.isAlertVisible} color={this.state.alertColor}>{this.state.alertMessage}</Toast>
             </div>
         );
     }

@@ -9,27 +9,15 @@ import { Container, DropdownItem, InputGroup,InputGroupAddon, Input } from 'reac
 class CreditCardGenerator extends React.Component {
     state = {
         creditCardNumber: '4111111111111111',
-        isAlertVisible: false,
-        alertMessage: null,
-        alertColor: null
-    };
-
-    removeToast = (t=2000) => {
-        setTimeout(() => this.setState({
-            isAlertVisible:false
-        }),t)
     };
 
     generateCreditCardNumber = event => {
         let number = generator.GenCC(event.target.getAttribute('cardtype'));
         copy(number);
+        this.props.handleAlert(`${event.target.getAttribute('cardtype')} card number is successfully copied`,'success', 2000);
         this.setState({
             creditCardNumber: number,
-            isAlertVisible: true,
-            alertMessage: `${event.target.getAttribute('cardtype')} card number is successfully copied`,
-            alertColor: 'success'
         });
-        this.removeToast();
     };
 
     render() {
@@ -49,7 +37,6 @@ class CreditCardGenerator extends React.Component {
                         <DropdownItem cardtype="Voyager" onClick={this.generateCreditCardNumber}>Voyager</DropdownItem>
                     </DropdownButton>
                 </InputGroup>
-                <Toast visible={this.state.isAlertVisible} color={this.state.alertColor}>{this.state.alertMessage}</Toast>
             </Container>
         );
     }

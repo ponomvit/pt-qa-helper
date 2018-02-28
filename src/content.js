@@ -1,51 +1,41 @@
-let isPortal = false;
-function checkIfPortal () {
-    const scripts = document.querySelectorAll('head script');
-    let isPortal = false;
-    for (let script of scripts) {
-        if (script.innerHTML.indexOf('Playtech') > -1) {
-            isPortal = true;
-            break;
+class QAHelper {
+    static checkIfPortal() {
+        const scripts = document.querySelectorAll('head script');
+        let isPortal = false;
+        for (let script of scripts) {
+            if (script.innerHTML.indexOf('Playtech') > -1) {
+                isPortal = true;
+                break;
+            }
         }
+        return isPortal;
+    };
+
+    static getStyle(selector, style) {
+        return window.getComputedStyle(selector, null).getPropertyValue(style)
+    };
+
+    static get headerColor() {
+        let mainHeader = document.querySelector('.desktop .navigation-container') || document.querySelector('.mobile .main-header__common') || document.querySelector('.fn-navigation') ;
+        return mainHeader ? QAHelper.getStyle(mainHeader,"background-color") : 'rgb(36, 80, 149)'
+    };
+
+    static get logo() {
+        const logoElem = document.querySelector('.main-header__logo') || document.querySelector('.main-logo__img')
+        if (logoElem && logoElem.getAttribute('src')) {
+            return window.location.origin + logoElem.getAttribute('src');
+        } else if (logoElem) {
+            return window.location.origin + logoElem.style.backgroundImage.slice(4, -1).replace(/"/g, "");
+        } else return './assets/icon-logo-header.png'
     }
-    return isPortal;
 }
-let getLogo = () => {
-    let logoElem = document.querySelector('.main-header__logo') || document.querySelector('.main-logo__img')
-    if (logoElem && logoElem.getAttribute('src')) {
-        return logoElem.getAttribute('src');
-    } else if (logoElem) {
-        return logoElem.style.backgroundImage.slice(4, -1).replace(/"/g, "");
-    }
-};
-
-let getHeaderColor = () => {
-    let mainHeader = document.querySelector('.navigation-container') || document.querySelector('.fn-navigation') ;
-    if (mainHeader) {
-        return getStyle(mainHeader,"background-color")
-    }
-};
-
-/*let getButtonColor = () => {
-    let SignUpButton = document.querySelector('.btn_action_sign-up') || document.querySelector('.btn_action_register');
-    let SignUpButtonColor = SignUpButton ? getStyle(SignUpButton,'border-color') : '#ffc107';
-    let SignUpButtonTextColor = SignUpButton ? getStyle(document.querySelector('.application-root'),"color" ) : '#111';
-    return [SignUpButtonColor,SignUpButtonTextColor];
-};*/
-
-let getStyle = (selector, style) => {
-    return window.getComputedStyle(selector, null).getPropertyValue(style)
-};
-
-isPortal = checkIfPortal();
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        //console.warn(request);
         if (request.getTabData) {
             sendResponse({
                 tabData:{
-                    isPortal:checkIfPortal(),
+                    isPortal: QAHelper.checkIfPortal(),
                     originUrl:window.location.origin,
                     hostname:window.location.hostname
                 }
@@ -56,34 +46,28 @@ chrome.runtime.onMessage.addListener(
 
 let observer = new MutationObserver(function (mutations, me) {
     for (let mutation of mutations) {
-        //console.log(mutation.target.querySelector('.fn-navigation'));
-        if (mutation.target.querySelector('.fn-navigation') ||  document.querySelector('.fn-navigation-container')) {
+        if (mutation.target.querySelector('.fn-navigation') ||  mutation.target.querySelector('.fn-navigation-container')) {
             me.disconnect();
-            let logo = getLogo();
-            let headerColor = getHeaderColor();
-            //let buttonStyles = getButtonColor();
-
             chrome.runtime.sendMessage({
                 contentData:true,
                 tabData:{
-                    isPortal:isPortal,
+                    isPortal: QAHelper.checkIfPortal(),
                     originUrl:window.location.origin,
                     hostname:window.location.hostname
                 },
                 headerOptions:{
                     url:window.location.origin,
                     hostname:window.location.hostname,
-                    logo: window.location.origin+logo,
-                    headerColor: headerColor,
-/*                    buttonColor: buttonStyles[0],
-                    buttonTextColor:buttonStyles[1]*/
+                    logo: QAHelper.logo,
+                    headerColor: QAHelper.headerColor
                 }
             });
             break;
         }
     }
 });
-if (isPortal) {
+
+if (QAHelper.checkIfPortal()) {
     observer.observe(document.body, {
         childList: true,
         subtree: true,
@@ -91,5 +75,3 @@ if (isPortal) {
         characterData: false
     });
 }
-
-
