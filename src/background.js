@@ -5,6 +5,7 @@ let state = {
         tabId:''
     },
     headerOptions:{
+        theme:'',
         hostname:'',
         url:'',
         logo:'./assets/icon-logo-header.png',
@@ -60,7 +61,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
     }
 });
 function sendState() {
-    chrome.runtime.sendMessage({headerOptions:state.headerOptions, tabData:state.tabData});
+    chrome.runtime.sendMessage({theme:state.theme, headerOptions:state.headerOptions, tabData:state.tabData});
 }
 
 function checkTab(tab) {

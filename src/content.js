@@ -28,6 +28,10 @@ class QAHelper {
             return window.location.origin + logoElem.style.backgroundImage.slice(4, -1).replace(/"/g, "");
         } else return './assets/icon-logo-header.png'
     }
+
+    static get theme() {
+        return document.querySelector('link[type="text/css"]').getAttribute('href').split('/')[1];
+    }
 }
 
 chrome.runtime.onMessage.addListener(
@@ -35,9 +39,10 @@ chrome.runtime.onMessage.addListener(
         if (request.getTabData) {
             sendResponse({
                 tabData:{
+                    theme: QAHelper.theme,
                     isPortal: QAHelper.checkIfPortal(),
-                    originUrl:window.location.origin,
-                    hostname:window.location.hostname
+                    originUrl: window.location.origin,
+                    hostname: window.location.hostname
                 }
             })
         }
@@ -50,12 +55,14 @@ let observer = new MutationObserver(function (mutations, me) {
             me.disconnect();
             chrome.runtime.sendMessage({
                 contentData:true,
+                theme: QAHelper.theme,
                 tabData:{
                     isPortal: QAHelper.checkIfPortal(),
                     originUrl:window.location.origin,
                     hostname:window.location.hostname
                 },
                 headerOptions:{
+                    theme: QAHelper.theme,
                     url:window.location.origin,
                     hostname:window.location.hostname,
                     logo: QAHelper.logo,

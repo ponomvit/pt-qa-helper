@@ -14,3 +14,14 @@ h6 {
 .modal-body.commits-modal-body {
   padding: 0 15px;
 }
+
+.version_table td {
+  max-width: 190px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.version_table td:hover {
+  overflow: visible;
+}

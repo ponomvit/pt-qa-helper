@@ -3,7 +3,7 @@
   "name": "PT QA HELPER",
   "short_name": "QA Helper",
   "description": "Very useful QA tool for copying test results and viewing the build information of the current browser tab.",
-  "version": "3.0.0",
+  "version": "3.1.1",
   "icons": {
     "48": "assets/icon-qa.png",
     "128": "assets/icon-qa.png"

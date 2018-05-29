@@ -18,7 +18,8 @@ class App extends Component {
         alertText:'Alert',
         alertColor:'success',
         headerOptions:'',
-        version:'',
+        backEndVersion:'',
+        frontEndVersion:''
     };
 
     onMessageListener = () => {
@@ -31,6 +32,7 @@ class App extends Component {
                     tabData
                 });
                 this.fetchVersionJson(tabData.originUrl)
+                this.fetchVersionJson(tabData.originUrl, headerOptions.theme)
             }
         })
     };
@@ -44,15 +46,19 @@ class App extends Component {
                 tabData,
                 headerOptions
             });
-            this.fetchVersionJson(tabData.originUrl)
+            this.fetchVersionJson(tabData.originUrl);
+            this.fetchVersionJson(tabData.originUrl, headerOptions.theme);
         });
     };
 
-    fetchVersionJson = (url) => {
-            let urlToFetch = url + "/html/version.json?" + Date.now();
+    fetchVersionJson = (url,theme='html') => {
+            let urlToFetch = url + `/${theme}/version.json?"${Date.now()}`;
             let handleErrors = (response) => {
                 if (!response.ok) {
-                    this.setState({version:'error'});
+                    this.setState({
+                        backEndVersion:'error',
+                        frontEndVersion:'error'
+                    });
                     throw Error(response.status + " " + response.statusText);
                 }
                 return response;
@@ -62,18 +68,27 @@ class App extends Component {
                 .then(handleErrors)
                 .then(response => response.json())
                 .then(response => {
-                    if ('WPL_Version' in response) {
-                        this.setState({version:response});
+                    if ('WPL_Version' in response && theme === 'html') {
+                        this.setState({backEndVersion:response});
                     }
+
+                    if ('WPL_Version' in response && theme !== 'html') {
+                        this.setState({frontEndVersion:response});
+                        console.log(response)
+                    }
+
                 })
                 .catch(error => {
+                    if (theme !== 'html') {
+                        this.setState({frontEndVersion:'error'})
+                    }
                     console.log(error);
                     fetch(urlToFetch.replace("/html/","/"))
                         .then(handleErrors)
                         .then(data => data.json())
                         .then(response => {
                             if ('WPL_Version' in response) {
-                                this.setState({version:response});
+                                this.setState({backEndVersion:response});
                             }
                         })
                         .catch(console.log)
@@ -101,10 +116,9 @@ class App extends Component {
     }
 
     render() {
-        let { logo , hostname , url , headerColor} = this.state.headerOptions;
-        let version = this.state.version;
-        let {isAlertVisible, alertText, alertColor} = this.state;
-        let alert = isAlertVisible && <Alert color = {alertColor} style={{marginTop:'20px',textAlign: 'center', zIndex:'9000'}}>{alertText}</Alert>;
+        let { logo , hostname , url , headerColor, theme} = this.state.headerOptions;
+        let {backEndVersion , frontEndVersion, isAlertVisible, alertText, alertColor} = this.state;
+        let alert = isAlertVisible && <Alert color = {alertColor} style={{marginTop:'20px',textAlign: 'center', position: 'absolute', bottom: '77px', right: '30px', zIndex:'9000'}}>{alertText}</Alert>;
     return (
         <div className="App">
                 <Row>
@@ -126,20 +140,19 @@ class App extends Component {
                             : <div>No data</div>}
                     </Col>
                 </Row>
-            <Jumbotron style={{marginBottom:0}} fluid>
                 <Row>
-                    <Col xs="8">
-                        <VersionBlock url={url} version={version}/>
-                    </Col>
                     <Col>
-                        {version && version !== 'error' && <TestResult version={version} url={url} handleAlert={this.handleAlert}/>}
-{/*                        <h5>Jenkins</h5>
+                        <VersionBlock url={url} frontEndVersion={frontEndVersion} backEndVersion={backEndVersion} theme={theme}/>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        {backEndVersion && backEndVersion !== 'error' && <TestResult backEndVersion={backEndVersion} frontEndVersion={frontEndVersion} url={url} handleAlert={this.handleAlert} theme={theme}/>}
+                        {/*                        <h5>Jenkins</h5>
                         <JenkinsBuildModal />
                         <JenkinsDeployModal />*/}
                     </Col>
                 </Row>
-            </Jumbotron>
-
             <br />
                 <Row>
                     <Col xs="4">

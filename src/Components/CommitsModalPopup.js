@@ -17,7 +17,7 @@ class CommitsModalPopup extends React.Component {
     render() {
         return (
             <div>
-                <h6><b>Last Commit hash: </b>
+                <h6><b>{this.props.text} </b>
                 <a onClick={this.toggle}><u>{this.props.commits[1].split(' |')[1].trim().substring(0,8)}</u></a>
                 </h6>
                 <Modal isOpen={this.state.modal} toggle={this.toggle} className={this.props.className}>
